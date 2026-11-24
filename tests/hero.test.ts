@@ -42,6 +42,24 @@ describe('hero hopping', () => {
     expect(hero.cell).toEqual({ row: 2, col: 0 });
   });
 
+  it('a held key (not re-pressed) keeps hopping', () => {
+    const hero = createHero();
+    updateHero(hero, 'downLeft', 'downLeft');
+    const events: HeroEvent[] = [];
+    for (let i = 0; i < HOP_FRAMES * 2; i++) events.push(...updateHero(hero, null, 'downLeft'));
+    expect(events.filter((e) => e === 'hopStart')).toHaveLength(2);
+  });
+
+  it('a long tap released just before landing hops only once', () => {
+    for (let holdFrames = 1; holdFrames < HOP_FRAMES; holdFrames++) {
+      const hero = createHero();
+      updateHero(hero, 'downRight', 'downRight');
+      for (let i = 1; i < holdFrames; i++) updateHero(hero, null, 'downRight');
+      const events = run(hero, HOP_FRAMES * 2);
+      expect(events, `held ${holdFrames} frames`).toEqual(['landed']);
+    }
+  });
+
   it('buffers a press made shortly before landing', () => {
     const hero = createHero();
     updateHero(hero, 'downRight');

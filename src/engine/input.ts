@@ -54,11 +54,20 @@ export class DirectionInput {
     this.pressed = null;
   }
 
+  /**
+   * Read this step's input: `pressed` is a fresh press since the last poll (seen once),
+   * `held` is the most recently pressed key that is still down.
+   */
+  poll(): { pressed: Dir | null; held: Dir | null } {
+    const pressed = this.pressed;
+    this.pressed = null;
+    return { pressed, held: this.held.at(-1) ?? null };
+  }
+
   /** Direction for this step: a fresh press wins, else the most recently held key. */
   consume(): Dir | null {
-    const dir = this.pressed ?? this.held.at(-1) ?? null;
-    this.pressed = null;
-    return dir;
+    const { pressed, held } = this.poll();
+    return pressed ?? held;
   }
 }
 
