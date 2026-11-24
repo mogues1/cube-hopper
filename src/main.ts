@@ -19,7 +19,8 @@ const loop = createLoop(
     stepMs: STEP_MS,
     maxFrameMs: MAX_FRAME_MS,
     update: () => {
-      updateHero(hero, input.consume());
+      const { pressed, held } = input.poll();
+      updateHero(hero, pressed, held);
     },
     render: () => renderFrame(ctx, hero),
   },

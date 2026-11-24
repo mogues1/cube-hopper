@@ -32,17 +32,19 @@ export function createHero(): Hero {
 }
 
 /**
- * Advance the hero by one simulation step. `input` is the direction requested this step
- * (a new press or a held key), or null. Mutates `hero` and returns what happened.
+ * Advance the hero by one simulation step. `pressed` is a fresh key press this step (it is
+ * buffered briefly so early presses are not lost); `held` is a key still held down, which
+ * only counts at the moment the hero is ready to hop, so a long tap never hops twice.
+ * Mutates `hero` and returns what happened.
  */
-export function updateHero(hero: Hero, input: Dir | null): HeroEvent[] {
+export function updateHero(hero: Hero, pressed: Dir | null, held: Dir | null = null): HeroEvent[] {
   const events: HeroEvent[] = [];
   const canAct = hero.state.kind === 'idle' || hero.state.kind === 'hopping';
 
   if (!canAct) {
     hero.buffered = null;
-  } else if (input !== null) {
-    hero.buffered = input;
+  } else if (pressed !== null) {
+    hero.buffered = pressed;
     hero.bufferAge = 0;
   } else if (hero.buffered !== null) {
     hero.bufferAge += 1;
@@ -82,8 +84,9 @@ export function updateHero(hero: Hero, input: Dir | null): HeroEvent[] {
   }
 
   // Start a new hop the same step the hero becomes idle, so held keys hop continuously.
-  if (hero.state.kind === 'idle' && hero.buffered !== null && !events.includes('respawned')) {
-    const dir = hero.buffered;
+  const next = hero.buffered ?? held;
+  if (hero.state.kind === 'idle' && next !== null && !events.includes('respawned')) {
+    const dir = next;
     hero.buffered = null;
     hero.facing = dir;
     hero.state = { kind: 'hopping', from: hero.cell, to: step(hero.cell, dir), t: 0 };
