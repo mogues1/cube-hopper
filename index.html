@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d0f1f" />
+    <title>Cube Hopper</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0d0f1f;
+        color: #f4f4ec;
+        font: 13px/1.4 system-ui, sans-serif;
+        overflow: hidden;
+      }
+      main {
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+      #screen {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        display: block;
+      }
+      .hint {
+        position: fixed;
+        bottom: 8px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        opacity: 0.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <canvas id="screen" aria-label="Cube Hopper game screen"></canvas>
+    </main>
+    <p class="hint">Hop with arrows (rotated like an arcade stick) or Q / E / A / D</p>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
