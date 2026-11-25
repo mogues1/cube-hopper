@@ -25,13 +25,18 @@ window.addEventListener('resize', placeHint);
 const input = new DirectionInput();
 attachKeyboard(window, input);
 
-// Dev/playtest shortcut: ?level=N starts at level N (1–9), round 1.
-const startLevel = Number(new URLSearchParams(window.location.search).get('level'));
-const game = createGame(
-  Number.isInteger(startLevel) && startLevel >= 1 && startLevel <= LEVEL_COUNT
-    ? { level: startLevel, round: 1 }
-    : undefined,
-);
+// Dev/playtest shortcuts: ?level=N starts at level N (1–9), round 1; ?enemies=0 turns
+// enemies off (the empty pyramid of M2).
+const params = new URLSearchParams(window.location.search);
+const startLevel = Number(params.get('level'));
+const game = createGame({
+  stage:
+    Number.isInteger(startLevel) && startLevel >= 1 && startLevel <= LEVEL_COUNT
+      ? { level: startLevel, round: 1 }
+      : undefined,
+  enemies: params.get('enemies') !== '0',
+  seed: Date.now() >>> 0,
+});
 
 const loop = createLoop(
   {

@@ -1,17 +1,21 @@
 import {
   FALL_FRAMES,
-  FALL_GRAVITY,
   HOP_FRAMES,
-  HOP_HEIGHT,
   INPUT_BUFFER_FRAMES,
+  LIFT_DROP_FRAMES,
+  LIFT_HOVER_Y,
+  LIFT_RIDE_FRAMES,
   RESPAWN_DELAY_FRAMES,
 } from './constants.ts';
+import { fallPoint, hopPoint, lerpPoint } from './motion.ts';
 import { APEX, cellToScreen, isBehindPyramid, isOnPyramid, step } from './pyramid.ts';
 import type { Cell, Dir, Point } from './pyramid.ts';
 
 export type HeroState =
   | { readonly kind: 'idle' }
   | { readonly kind: 'hopping'; readonly from: Cell; readonly to: Cell; t: number }
+  /** Carried by a lift pad from `pad` (an off-pyramid cell) to the apex. */
+  | { readonly kind: 'riding'; readonly pad: Cell; t: number }
   | { readonly kind: 'falling'; readonly at: Cell; readonly behind: boolean; t: number }
   | { readonly kind: 'respawning'; t: number };
 
@@ -25,7 +29,20 @@ export interface Hero {
   bufferAge: number;
 }
 
-export type HeroEvent = 'hopStart' | 'landed' | 'fellOff' | 'respawned';
+export type HeroEvent = 'hopStart' | 'landed' | 'boarded' | 'arrived' | 'fellOff' | 'respawned';
+
+export interface HeroHooks {
+  /**
+   * Runs when the hero lands on a cube (including the apex after a lift-pad ride). Returning
+   * false holds the hero in place: no follow-on hop this step and the buffer is cleared,
+   * e.g. when that landing completes the round.
+   */
+  onLanded?(cell: Cell): boolean;
+  /** True if a lift pad waits at this off-pyramid cell; the hero boards it instead of falling. */
+  isPad?(cell: Cell): boolean;
+}
+
+export const RIDE_TOTAL_FRAMES = LIFT_RIDE_FRAMES + LIFT_DROP_FRAMES;
 
 export function createHero(): Hero {
   return { cell: APEX, state: { kind: 'idle' }, facing: 'downRight', buffered: null, bufferAge: 0 };
@@ -35,15 +52,13 @@ export function createHero(): Hero {
  * Advance the hero by one simulation step. `pressed` is a fresh key press this step (it is
  * buffered briefly so early presses are not lost); `held` is a key still held down, which
  * only counts at the moment the hero is ready to hop, so a long tap never hops twice.
- * `onLanded` runs when the hero lands on a cube; returning false holds the hero in place
- * (no follow-on hop this step, buffer cleared), e.g. when that landing completes the round.
  * Mutates `hero` and returns what happened.
  */
 export function updateHero(
   hero: Hero,
   pressed: Dir | null,
   held: Dir | null = null,
-  onLanded?: (cell: Cell) => boolean,
+  hooks: HeroHooks = {},
 ): HeroEvent[] {
   let hold = false;
   const events: HeroEvent[] = [];
@@ -59,6 +74,13 @@ export function updateHero(
     if (hero.bufferAge > INPUT_BUFFER_FRAMES) hero.buffered = null;
   }
 
+  const land = (cell: Cell): void => {
+    hero.cell = cell;
+    hero.state = { kind: 'idle' };
+    events.push('landed');
+    if (hooks.onLanded && !hooks.onLanded(cell)) hold = true;
+  };
+
   const s = hero.state;
   switch (s.kind) {
     case 'idle':
@@ -67,14 +89,23 @@ export function updateHero(
       s.t += 1;
       if (s.t >= HOP_FRAMES) {
         if (isOnPyramid(s.to)) {
-          hero.cell = s.to;
-          hero.state = { kind: 'idle' };
-          events.push('landed');
-          if (onLanded && !onLanded(s.to)) hold = true;
+          land(s.to);
+        } else if (hooks.isPad?.(s.to)) {
+          hero.state = { kind: 'riding', pad: s.to, t: 0 };
+          hero.buffered = null;
+          events.push('boarded');
         } else {
           hero.state = { kind: 'falling', at: s.to, behind: isBehindPyramid(s.to), t: 0 };
           events.push('fellOff');
         }
+      }
+      break;
+    case 'riding':
+      s.t += 1;
+      if (s.t >= RIDE_TOTAL_FRAMES) {
+        hero.facing = 'downRight';
+        events.push('arrived');
+        land(APEX);
       }
       break;
     case 'falling':
@@ -109,10 +140,38 @@ export function updateHero(
   return events;
 }
 
+/**
+ * The cube the hero counts as standing on for collisions: the start cube for the first half
+ * of a hop and the target for the second half. Null when not on the pyramid.
+ */
+export function heroOccupies(hero: Hero): Cell | null {
+  const s = hero.state;
+  switch (s.kind) {
+    case 'idle':
+      return hero.cell;
+    case 'hopping':
+      if (s.t < HOP_FRAMES / 2) return s.from;
+      return isOnPyramid(s.to) ? s.to : null;
+    default:
+      return null;
+  }
+}
+
 export interface HeroPose extends Point {
   readonly visible: boolean;
   /** Draw before the pyramid (falling off a back edge). */
   readonly behind: boolean;
+}
+
+/** Screen point where a lift pad ride ends, above the apex. */
+export function rideTopPoint(): Point {
+  const apex = cellToScreen(APEX);
+  return { x: apex.x, y: apex.y - LIFT_HOVER_Y };
+}
+
+/** Where a pad carrying the hero is, `t` frames into the ride (the pad stays at the top for the drop). */
+export function padRidePoint(pad: Cell, t: number): Point {
+  return lerpPoint(cellToScreen(pad), rideTopPoint(), Math.min(t / LIFT_RIDE_FRAMES, 1));
 }
 
 /** Where to draw the hero's feet this step. */
@@ -123,17 +182,15 @@ export function heroPose(hero: Hero): HeroPose {
       const p = cellToScreen(hero.cell);
       return { x: p.x, y: p.y, visible: true, behind: false };
     }
-    case 'hopping': {
-      const p = s.t / HOP_FRAMES;
-      const a = cellToScreen(s.from);
-      const b = cellToScreen(s.to);
-      const lift = HOP_HEIGHT * 4 * p * (1 - p);
-      return { x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p - lift, visible: true, behind: false };
+    case 'hopping':
+      return { ...hopPoint(s.from, s.to, s.t / HOP_FRAMES), visible: true, behind: false };
+    case 'riding': {
+      if (s.t < LIFT_RIDE_FRAMES) return { ...padRidePoint(s.pad, s.t), visible: true, behind: false };
+      const p = (s.t - LIFT_RIDE_FRAMES) / LIFT_DROP_FRAMES;
+      return { ...lerpPoint(rideTopPoint(), cellToScreen(APEX), p * p), visible: true, behind: false };
     }
-    case 'falling': {
-      const base = cellToScreen(s.at);
-      return { x: base.x, y: base.y + 0.5 * FALL_GRAVITY * s.t * s.t, visible: true, behind: s.behind };
-    }
+    case 'falling':
+      return { ...fallPoint(s.at, s.t), visible: true, behind: s.behind };
     case 'respawning':
       return { x: 0, y: 0, visible: false, behind: false };
   }

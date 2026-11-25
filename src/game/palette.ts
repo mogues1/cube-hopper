@@ -16,6 +16,8 @@ export const PALETTE = {
   pipFeet: '#f0a030',
   pipSprout: '#6cc04a',
   text: '#f4f4ec',
+  hazardRed: '#d8323c',
+  chaserViolet: '#8a4fd0',
 } as const;
 
 export type PaletteName = keyof typeof PALETTE;

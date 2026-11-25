@@ -139,7 +139,7 @@ describe('landing hook', () => {
     updateHero(hero, 'downLeft', 'downLeft');
     const events: HeroEvent[] = [];
     for (let i = 0; i < HOP_FRAMES; i++) {
-      events.push(...updateHero(hero, null, 'downLeft', (cell) => (landed.push(cell), false)));
+      events.push(...updateHero(hero, null, 'downLeft', { onLanded: (cell) => (landed.push(cell), false) }));
     }
     expect(landed).toEqual([{ row: 1, col: 0 }]);
     expect(events).toEqual(['landed']);
@@ -151,7 +151,7 @@ describe('landing hook', () => {
     const hero = createHero();
     updateHero(hero, 'downLeft', 'downLeft');
     const events: HeroEvent[] = [];
-    for (let i = 0; i < HOP_FRAMES; i++) events.push(...updateHero(hero, null, 'downLeft', () => true));
+    for (let i = 0; i < HOP_FRAMES; i++) events.push(...updateHero(hero, null, 'downLeft', { onLanded: () => true }));
     expect(events).toEqual(['landed', 'hopStart']);
   });
 });

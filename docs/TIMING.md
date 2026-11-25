@@ -21,19 +21,23 @@ Exact speeds and spawn times for the original game are not published. This sheet
 | Respawn delay after fall | 45 | TBD | | `RESPAWN_DELAY_FRAMES` |
 | Input buffer window | 6 | n/a (design choice) | | `INPUT_BUFFER_FRAMES` |
 
-## Enemies (filled in M3–M4)
+## Enemies (M3 placeholders; the rest in M4)
 
-| Parameter | Placeholder | Measured | Source clip |
-| --- | --- | --- | --- |
-| Hazard ball hop interval, L1 | TBD | TBD | |
-| First hazard ball spawn after round start | TBD | TBD | |
-| Egg wait on bottom row before hatching | TBD | TBD | |
-| Chaser hop interval, L1 | TBD | TBD | |
-| Freeze duration | TBD | TBD | |
-| Side crawler step interval | TBD | TBD | |
-| Undoer hop interval | TBD | TBD | |
-| Lift pad ride time to top | TBD | TBD | |
-| Spawn interval range per round | TBD | TBD | |
+| Parameter | Placeholder | Measured | Source clip | Used in |
+| --- | --- | --- | --- | --- |
+| Enemy drop-in from above onto row 1 | 24 | TBD | | `ENEMY_DROP_FRAMES` |
+| Enemy hop duration | 18 (same as hero) | TBD | | `HOP_FRAMES` |
+| Hazard ball rest between hops, L1 | 14 (32 per hop with the hop) | TBD | | `BALL_PAUSE_FRAMES` |
+| First hazard ball spawn after round start | 120 | TBD | | `FIRST_SPAWN_FRAMES` |
+| Spawn interval | 150 | TBD | | `SPAWN_INTERVAL_FRAMES` |
+| Max hazard balls at once, L1 | 2 | TBD | | `MAX_HAZARD_BALLS` |
+| Egg wait on bottom row before hatching | 60 | TBD | | `EGG_HATCH_FRAMES` |
+| Egg / Chaser rest between hops, L1 | 18 (36 per hop with the hop) | TBD | | `CHASER_PAUSE_FRAMES` |
+| Lift pad ride time to top | 90 + 12 drop | TBD | | `LIFT_RIDE_FRAMES`, `LIFT_DROP_FRAMES` |
+| Freeze duration | TBD | TBD | | M4 |
+| Side crawler step interval | TBD | TBD | | M4 |
+| Undoer hop interval | TBD | TBD | | M4 |
+| Spawn interval range per round | TBD | TBD | | M4 |
 
 ## Sequences
 
@@ -44,4 +48,5 @@ Exact speeds and spawn times for the original game are not published. This sheet
 | Level demo: pause between hops | 10 | TBD | | `DEMO_HOP_PAUSE_FRAMES` |
 | Level demo: hold after last hop | 45 | TBD | | `DEMO_END_FRAMES` |
 | Level demo length (6 hops, total) | 240 | TBD | | derived |
-| Death freeze before reset | TBD | TBD | | M3 |
+| Death freeze before reset | 90 | TBD | | `DEATH_FREEZE_FRAMES` |
+| Game over: minimum before a key restarts | 60 | n/a (design choice) | | `GAME_OVER_MIN_FRAMES` |

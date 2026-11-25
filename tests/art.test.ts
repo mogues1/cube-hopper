@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CUBE_BMP_H, CUBE_BMP_W, cubeFaceAt } from '../src/game/cube.ts';
 import { FONT, GLYPH_H, GLYPH_W, rasterizeText, textWidth } from '../src/game/font.ts';
 import { PALETTE } from '../src/game/palette.ts';
-import { PIP_BACK, PIP_FRONT } from '../src/game/sprites.ts';
+import { ALL_SPRITES, LIFT_PAD_COLORS, PIP_BACK } from '../src/game/sprites.ts';
 
 describe('palette', () => {
   it('stays within 16 distinct colours', () => {
@@ -11,10 +11,7 @@ describe('palette', () => {
 });
 
 describe('sprites', () => {
-  for (const [name, sprite] of [
-    ['PIP_FRONT', PIP_FRONT],
-    ['PIP_BACK', PIP_BACK],
-  ] as const) {
+  for (const [name, sprite] of Object.entries(ALL_SPRITES)) {
     it(`${name} rows match its declared size and use known colours`, () => {
       expect(sprite.rows).toHaveLength(sprite.height);
       for (const row of sprite.rows) {
@@ -25,6 +22,14 @@ describe('sprites', () => {
       }
     });
   }
+
+  it('sprite and pad colors all come from the palette', () => {
+    const palette = new Set<string>(Object.values(PALETTE));
+    for (const [name, sprite] of Object.entries(ALL_SPRITES)) {
+      for (const c of Object.values(sprite.colors)) expect(palette.has(c), name).toBe(true);
+    }
+    for (const c of LIFT_PAD_COLORS) expect(palette.has(c)).toBe(true);
+  });
 
   it('the back view has no eye', () => {
     expect(PIP_BACK.rows.join('')).not.toMatch(/[wk]/);
