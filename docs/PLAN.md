@@ -34,7 +34,7 @@ Nine milestones over 16 weeks, one full-time developer, art and audio part time 
 - [x] Hero state machine: idle → hopping (arc) → falling → respawn, input buffer — `src/game/hero.ts`
 - [x] Keyboard input with arcade-rotated arrows, letters and numpad — `src/engine/input.ts`
 - [x] Unit tests — `tests/`
-- [ ] Verify steady 60 fps on a real phone (manual check once deployed)
+- [x] Verify steady 60 fps on a real phone: crisp and smooth, no stutter in the demo hops (checked 2026-11-25 over the home network with `npm run dev -- --host`)
 
 ## M2 deliverables (this repo)
 
