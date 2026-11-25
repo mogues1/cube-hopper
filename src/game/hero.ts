@@ -35,9 +35,17 @@ export function createHero(): Hero {
  * Advance the hero by one simulation step. `pressed` is a fresh key press this step (it is
  * buffered briefly so early presses are not lost); `held` is a key still held down, which
  * only counts at the moment the hero is ready to hop, so a long tap never hops twice.
+ * `onLanded` runs when the hero lands on a cube; returning false holds the hero in place
+ * (no follow-on hop this step, buffer cleared), e.g. when that landing completes the round.
  * Mutates `hero` and returns what happened.
  */
-export function updateHero(hero: Hero, pressed: Dir | null, held: Dir | null = null): HeroEvent[] {
+export function updateHero(
+  hero: Hero,
+  pressed: Dir | null,
+  held: Dir | null = null,
+  onLanded?: (cell: Cell) => boolean,
+): HeroEvent[] {
+  let hold = false;
   const events: HeroEvent[] = [];
   const canAct = hero.state.kind === 'idle' || hero.state.kind === 'hopping';
 
@@ -62,6 +70,7 @@ export function updateHero(hero: Hero, pressed: Dir | null, held: Dir | null = n
           hero.cell = s.to;
           hero.state = { kind: 'idle' };
           events.push('landed');
+          if (onLanded && !onLanded(s.to)) hold = true;
         } else {
           hero.state = { kind: 'falling', at: s.to, behind: isBehindPyramid(s.to), t: 0 };
           events.push('fellOff');
@@ -84,6 +93,10 @@ export function updateHero(hero: Hero, pressed: Dir | null, held: Dir | null = n
   }
 
   // Start a new hop the same step the hero becomes idle, so held keys hop continuously.
+  if (hold) {
+    hero.buffered = null;
+    return events;
+  }
   const next = hero.buffered ?? held;
   if (hero.state.kind === 'idle' && next !== null && !events.includes('respawned')) {
     const dir = next;

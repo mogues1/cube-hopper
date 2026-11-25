@@ -28,3 +28,10 @@ export const RESPAWN_DELAY_FRAMES = 45;
 export const INPUT_BUFFER_FRAMES = 6;
 /** Downward acceleration while falling, px/frame², tuned so a fall clears the screen in FALL_FRAMES. */
 export const FALL_GRAVITY = (2 * SCREEN_H) / (FALL_FRAMES * FALL_FRAMES);
+
+/** Sequence timing (frames at 60 Hz). Placeholders; see docs/TIMING.md "Sequences". */
+export const DEMO_START_FRAMES = 30; // level title shown before the demo hops
+export const DEMO_HOP_PAUSE_FRAMES = 10; // idle pause between demo hops
+export const DEMO_END_FRAMES = 45; // hold on the finished demo before the round starts
+export const ROUND_FLASH_FRAMES = 120; // round-complete flash before the next round
+export const ROUND_FLASH_PERIOD = 8; // frames per color in the flash

@@ -62,6 +62,10 @@ Taken from the original game's published rules; see the plan doc for the full ta
 - 9 levels × 4 rounds; level 9's last round repeats forever.
 - Color rules: L1 S→D · L2 S→I→D · L3 S↔D toggles · L4 S→I→D, D→I · L5–9 S→I→D, D→S.
 - Scoring: 15 intermediate, 25 destination, 100 freeze orb, 300 Undoer, 500 Chaser lured off, 50/100 per unused lift pad, round bonus 1,000 + 250 per round.
+- Cube points are for progress only: a cube that stays finished or is knocked back (L3–9) scores nothing, and scores again when re-finished.
+- The hero starts each round on the apex without coloring it; only landings change cubes. A fall keeps the board as it was.
+- Level demo: before round 1 of each level, Pip hops apex ↔ the cube below-left three times each way (6 hops), so the player sees every step of that level's rule, including what hopping a finished cube does. The original showed 4 hops; 6 are needed to show the revert on levels 4–9. Demo hops never score, and input is ignored.
+- HUD: score (top left), goal color sequence under it, level and round (top right); "LEVEL n" caption during the demo and "BONUS n" during the round-complete flash.
 - Extra lives at 8,000 and every 14,000 after; start with 3 (configurable).
 
 ## Out of scope for v1
