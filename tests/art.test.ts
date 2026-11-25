@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CUBE_BMP_H, CUBE_BMP_W, cubeFaceAt } from '../src/game/cube.ts';
+import { FONT, GLYPH_H, GLYPH_W, rasterizeText, textWidth } from '../src/game/font.ts';
 import { PALETTE } from '../src/game/palette.ts';
 import { PIP_BACK, PIP_FRONT } from '../src/game/sprites.ts';
 
@@ -67,3 +68,38 @@ describe('cube rasterizer', () => {
     expect(cubeFaceAt(0, 31)).toBe('none');
   });
 });
+
+describe('HUD font', () => {
+  it('every glyph is 3 × 5 and uses only ink and blank', () => {
+    for (const [ch, rows] of Object.entries(FONT)) {
+      expect(rows, ch).toHaveLength(GLYPH_H);
+      for (const row of rows) expect(row, ch).toMatch(new RegExp(`^[#.]{${GLYPH_W}}$`));
+    }
+  });
+
+  it('covers digits, letters and HUD punctuation', () => {
+    for (const ch of '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ >-:!') expect(FONT[ch], ch).toBeDefined();
+  });
+
+  it('digit glyphs are all distinct', () => {
+    const digits = '0123456789'.split('').map((d) => FONT[d]?.join('/'));
+    expect(new Set(digits).size).toBe(10);
+  });
+
+  it('rasterizes inside the measured width, case-insensitively', () => {
+    const pts: [number, number][] = [];
+    rasterizeText('Lv 9', 10, 20, (x, y) => pts.push([x, y]));
+    expect(pts.length).toBeGreaterThan(0);
+    for (const [x, y] of pts) {
+      expect(x).toBeGreaterThanOrEqual(10);
+      expect(x).toBeLessThan(10 + textWidth('Lv 9'));
+      expect(y).toBeGreaterThanOrEqual(20);
+      expect(y).toBeLessThan(20 + GLYPH_H);
+    }
+    const upper: [number, number][] = [];
+    rasterizeText('LV 9', 10, 20, (x, y) => upper.push([x, y]));
+    expect(pts).toEqual(upper);
+    expect(textWidth('')).toBe(0);
+  });
+});
+

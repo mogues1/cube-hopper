@@ -35,3 +35,15 @@ Nine milestones over 16 weeks, one full-time developer, art and audio part time 
 - [x] Keyboard input with arcade-rotated arrows, letters and numpad — `src/engine/input.ts`
 - [x] Unit tests — `tests/`
 - [ ] Verify steady 60 fps on a real phone (manual check once deployed)
+
+## M2 deliverables (this repo)
+
+- [x] All 5 color rules as data, with 15 / 25 cube scoring for progress only — `src/game/rules.ts`
+- [x] Per-cube color state and round-complete check — `src/game/board.ts`
+- [x] 9 levels × 4 rounds, level 9 round 4 repeats; round bonus 1,000 + 250 per round — `src/game/rules.ts`
+- [x] Game flow: level demo → playing → round-complete flash (bonus) → next round or next level's demo — `src/game/game.ts`
+- [x] HUD: score, level, round, goal color sequence, demo and bonus captions; 3 × 5 pixel font — `src/game/render.ts`, `src/game/font.ts`
+- [x] Unit tests for every rule, scoring, bonus and progression — `tests/rules.test.ts`, `tests/game.test.ts`
+- [x] A look-ahead bot clears an empty pyramid through all 36 rounds with no falls — `tests/game.test.ts`
+- [x] `?level=N` URL option to start at any level for playtesting
+- [ ] Measure the sequence timings in [TIMING.md](TIMING.md) (placeholders for now)

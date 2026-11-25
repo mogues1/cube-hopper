@@ -131,3 +131,28 @@ describe('falling off', () => {
     expect(hero.state.kind).toBe('idle');
   });
 });
+
+describe('landing hook', () => {
+  it('reports the landing cell and, when it returns false, holds the hero despite a held key', () => {
+    const hero = createHero();
+    const landed: unknown[] = [];
+    updateHero(hero, 'downLeft', 'downLeft');
+    const events: HeroEvent[] = [];
+    for (let i = 0; i < HOP_FRAMES; i++) {
+      events.push(...updateHero(hero, null, 'downLeft', (cell) => (landed.push(cell), false)));
+    }
+    expect(landed).toEqual([{ row: 1, col: 0 }]);
+    expect(events).toEqual(['landed']);
+    expect(hero.state.kind).toBe('idle');
+    expect(hero.buffered).toBeNull();
+  });
+
+  it('returning true lets a held key keep hopping', () => {
+    const hero = createHero();
+    updateHero(hero, 'downLeft', 'downLeft');
+    const events: HeroEvent[] = [];
+    for (let i = 0; i < HOP_FRAMES; i++) events.push(...updateHero(hero, null, 'downLeft', () => true));
+    expect(events).toEqual(['landed', 'hopStart']);
+  });
+});
+

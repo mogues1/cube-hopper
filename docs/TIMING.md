@@ -37,8 +37,11 @@ Exact speeds and spawn times for the original game are not published. This sheet
 
 ## Sequences
 
-| Parameter | Placeholder | Measured | Source clip |
-| --- | --- | --- | --- |
-| Round-complete flash | TBD | TBD | |
-| Level demo length | TBD | TBD | |
-| Death freeze before reset | TBD | TBD | |
+| Parameter | Placeholder | Measured | Source clip | Used in |
+| --- | --- | --- | --- | --- |
+| Round-complete flash | 120 (8 per color) | TBD | | `ROUND_FLASH_FRAMES`, `ROUND_FLASH_PERIOD` |
+| Level demo: title before first hop | 30 | TBD | | `DEMO_START_FRAMES` |
+| Level demo: pause between hops | 10 | TBD | | `DEMO_HOP_PAUSE_FRAMES` |
+| Level demo: hold after last hop | 45 | TBD | | `DEMO_END_FRAMES` |
+| Level demo length (6 hops, total) | 240 | TBD | | derived |
+| Death freeze before reset | TBD | TBD | | M3 |
