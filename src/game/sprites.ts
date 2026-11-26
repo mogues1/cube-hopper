@@ -127,6 +127,71 @@ export const CHASER: PixelSprite = {
   ],
 };
 
+/** Freeze orb: pale ice-blue orb with a snowflake glint. */
+export const FREEZE_ORB: PixelSprite = {
+  width: 10,
+  height: 10,
+  anchorX: 5,
+  anchorY: 9,
+  colors: { b: PALETTE.cubeTopIntermediate, w: PALETTE.pipEyeWhite, k: PALETTE.pipOutline },
+  rows: [
+    '...bbbb...',
+    '.bbbbbbbb.',
+    '.bbbwbbbb.',
+    'bbwbwbwbbb',
+    'bbbwwwbbbb',
+    'bwwwwwwwbb',
+    'bbbwwwbbbb',
+    '.bwbwbwbb.',
+    '.kbbwbbbk.',
+    '...kkkk...',
+  ],
+};
+
+/** Side crawler: a green beetle that clings to the cube sides (mirrored for the right side). */
+export const CRAWLER: PixelSprite = {
+  width: 12,
+  height: 10,
+  anchorX: 6,
+  anchorY: 5,
+  colors: { g: PALETTE.pipSprout, w: PALETTE.pipEyeWhite, k: PALETTE.pipOutline },
+  rows: [
+    '....kkkk....',
+    '..kkggggkk..',
+    '.kggwggwggk.',
+    'kggggggggggk',
+    'kgkgggggkggk',
+    'kggggggggggk',
+    '.kgggkkgggk.',
+    '..kkggggkk..',
+    '.k..kkkk..k.',
+    'k..k....k..k',
+  ],
+};
+
+/** Undoer: small orange gremlin carrying a paint roller loaded with the start color. */
+export const UNDOER: PixelSprite = {
+  width: 12,
+  height: 12,
+  anchorX: 6,
+  anchorY: 11,
+  colors: { o: PALETTE.pipFeet, y: PALETTE.cubeTopStart, w: PALETTE.pipEyeWhite, k: PALETTE.pipOutline },
+  rows: [
+    'yyyyyy......',
+    'kkkkkk......',
+    '..k.........',
+    '..k..oooo...',
+    '..k.oooooo..',
+    '..koowwowwo.',
+    '..kooookooo.',
+    '..koooooooo.',
+    '...oooooooo.',
+    '....oooooo..',
+    '....o....o..',
+    '...kk...kk..',
+  ],
+};
+
 /** Colors a lift pad cycles through to look like it is spinning. */
 export const LIFT_PAD_COLORS: readonly string[] = [
   PALETTE.cubeTopIntermediate,
@@ -168,6 +233,9 @@ export const ALL_SPRITES: Readonly<Record<string, PixelSprite>> = {
   HAZARD_BALL,
   CHASER_EGG,
   CHASER,
+  FREEZE_ORB,
+  CRAWLER,
+  UNDOER,
   LIFT_PAD,
   LIFE_ICON,
 };

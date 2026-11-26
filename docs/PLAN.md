@@ -62,5 +62,18 @@ Nine milestones over 16 weeks, one full-time developer, art and audio part time 
 - [x] Tests: enemy movement and AI, pads and the ride, spawning, collisions, lives, game over, the lure, and an idle player losing every life to the Chaser — `tests/enemies.test.ts`, `tests/hazards.test.ts`
 - [x] `?enemies=0` URL option for the empty pyramid
 - [ ] Measure the enemy and sequence timings in [TIMING.md](TIMING.md) (placeholders for now)
-- [ ] Side-crawler rendering spike (risk mitigation from the plan doc), deferred to M4
+- [x] Side-crawler rendering spike (risk mitigation from the plan doc): done in M4
+
+## M4 deliverables (this repo)
+
+- [x] Freeze orb: catch for 100, freezes enemies and spawns, blink warning before they move — `src/game/game.ts`, `src/game/enemies.ts`
+- [x] Side crawlers on the left and right cube faces — `src/game/enemies.ts`
+- [x] Undoers: revert cubes to the start color, catch for 300 — `src/game/enemies.ts`, `src/game/game.ts`
+- [x] Per-level speeds and per-round pads and spawn tables in JSON, validated at load — `src/data/rounds.json`, `src/game/config.ts`
+- [x] Speed curve by level for the hero and every enemy
+- [x] Sprites: freeze orb, side crawler, Undoer (palette still 16 colors)
+- [x] All 36 rounds run with their tables' enemies and stay consistent — `tests/cast.test.ts`
+- [x] Data matches the timing sheet within 10%, checked by test against `docs/TIMING.md` — `tests/config.test.ts` (placeholder values until measured; the test switches to the Measured column automatically)
+- [ ] Measure the timing sheet from footage and tune `rounds.json` until the test passes against measured values (carried to M8)
+- [x] Side-crawler risk from the plan: resolved by building crawlers outright (they collide by cube, drawn on the side faces)
 

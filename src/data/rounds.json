@@ -1,0 +1,1252 @@
+{
+  "levels": [
+    {
+      "level": 1,
+      "padPoints": 50,
+      "speed": {
+        "heroHop": 18,
+        "enemyHop": 18,
+        "ballRest": 14,
+        "chaserRest": 18,
+        "eggHatch": 60,
+        "crawlerRest": 20,
+        "undoerRest": 16,
+        "freeze": 300
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            }
+          ],
+          "spawn": {
+            "first": 120,
+            "interval": 150,
+            "maxBalls": 2,
+            "egg": true,
+            "weights": {
+              "ball": 4
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            }
+          ],
+          "spawn": {
+            "first": 120,
+            "interval": 144,
+            "maxBalls": 2,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 120,
+            "interval": 138,
+            "maxBalls": 2,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            }
+          ],
+          "spawn": {
+            "first": 120,
+            "interval": 132,
+            "maxBalls": 2,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 18,
+        "enemyHop": 18,
+        "ballRest": 13,
+        "chaserRest": 17,
+        "eggHatch": 55,
+        "crawlerRest": 19,
+        "undoerRest": 15,
+        "freeze": 300
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            }
+          ],
+          "spawn": {
+            "first": 112,
+            "interval": 143,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            }
+          ],
+          "spawn": {
+            "first": 112,
+            "interval": 137,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 112,
+            "interval": 131,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            }
+          ],
+          "spawn": {
+            "first": 112,
+            "interval": 125,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 17,
+        "enemyHop": 17,
+        "ballRest": 12,
+        "chaserRest": 16,
+        "eggHatch": 50,
+        "crawlerRest": 18,
+        "undoerRest": 14,
+        "freeze": 270
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            },
+            {
+              "side": "left",
+              "row": 1
+            }
+          ],
+          "spawn": {
+            "first": 104,
+            "interval": 136,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 104,
+            "interval": 130,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            },
+            {
+              "side": "left",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 104,
+            "interval": 124,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 3
+            }
+          ],
+          "spawn": {
+            "first": 104,
+            "interval": 118,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 17,
+        "enemyHop": 17,
+        "ballRest": 11,
+        "chaserRest": 15,
+        "eggHatch": 45,
+        "crawlerRest": 17,
+        "undoerRest": 13,
+        "freeze": 270
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            },
+            {
+              "side": "left",
+              "row": 1
+            }
+          ],
+          "spawn": {
+            "first": 96,
+            "interval": 129,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 96,
+            "interval": 123,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            },
+            {
+              "side": "left",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 96,
+            "interval": 117,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 3
+            }
+          ],
+          "spawn": {
+            "first": 96,
+            "interval": 111,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 16,
+        "enemyHop": 16,
+        "ballRest": 10,
+        "chaserRest": 14,
+        "eggHatch": 40,
+        "crawlerRest": 16,
+        "undoerRest": 12,
+        "freeze": 240
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            },
+            {
+              "side": "left",
+              "row": 1
+            }
+          ],
+          "spawn": {
+            "first": 88,
+            "interval": 122,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 88,
+            "interval": 116,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            },
+            {
+              "side": "left",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 88,
+            "interval": 110,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 3
+            }
+          ],
+          "spawn": {
+            "first": 88,
+            "interval": 104,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 6,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 16,
+        "enemyHop": 16,
+        "ballRest": 9,
+        "chaserRest": 13,
+        "eggHatch": 40,
+        "crawlerRest": 15,
+        "undoerRest": 11,
+        "freeze": 240
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            },
+            {
+              "side": "left",
+              "row": 1
+            },
+            {
+              "side": "right",
+              "row": 1
+            }
+          ],
+          "spawn": {
+            "first": 80,
+            "interval": 115,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 6
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 80,
+            "interval": 109,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            },
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 6
+            }
+          ],
+          "spawn": {
+            "first": 80,
+            "interval": 103,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 3
+            }
+          ],
+          "spawn": {
+            "first": 80,
+            "interval": 97,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 7,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 15,
+        "enemyHop": 15,
+        "ballRest": 8,
+        "chaserRest": 12,
+        "eggHatch": 35,
+        "crawlerRest": 14,
+        "undoerRest": 10,
+        "freeze": 210
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            },
+            {
+              "side": "left",
+              "row": 1
+            },
+            {
+              "side": "right",
+              "row": 1
+            }
+          ],
+          "spawn": {
+            "first": 72,
+            "interval": 108,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 6
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 72,
+            "interval": 102,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            },
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 6
+            }
+          ],
+          "spawn": {
+            "first": 72,
+            "interval": 96,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 3
+            }
+          ],
+          "spawn": {
+            "first": 72,
+            "interval": 90,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 8,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 15,
+        "enemyHop": 15,
+        "ballRest": 7,
+        "chaserRest": 11,
+        "eggHatch": 35,
+        "crawlerRest": 13,
+        "undoerRest": 9,
+        "freeze": 210
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            },
+            {
+              "side": "left",
+              "row": 1
+            },
+            {
+              "side": "right",
+              "row": 1
+            }
+          ],
+          "spawn": {
+            "first": 64,
+            "interval": 101,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 6
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 64,
+            "interval": 95,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            },
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 6
+            }
+          ],
+          "spawn": {
+            "first": 64,
+            "interval": 89,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 3
+            }
+          ],
+          "spawn": {
+            "first": 64,
+            "interval": 83,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "level": 9,
+      "padPoints": 100,
+      "speed": {
+        "heroHop": 14,
+        "enemyHop": 14,
+        "ballRest": 6,
+        "chaserRest": 10,
+        "eggHatch": 30,
+        "crawlerRest": 12,
+        "undoerRest": 8,
+        "freeze": 180
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "pads": [
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 4
+            },
+            {
+              "side": "left",
+              "row": 1
+            },
+            {
+              "side": "right",
+              "row": 1
+            }
+          ],
+          "spawn": {
+            "first": 60,
+            "interval": 94,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 2,
+          "pads": [
+            {
+              "side": "left",
+              "row": 3
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 6
+            },
+            {
+              "side": "right",
+              "row": 2
+            }
+          ],
+          "spawn": {
+            "first": 60,
+            "interval": 88,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 3,
+          "pads": [
+            {
+              "side": "left",
+              "row": 5
+            },
+            {
+              "side": "right",
+              "row": 2
+            },
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 6
+            }
+          ],
+          "spawn": {
+            "first": 60,
+            "interval": 82,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        },
+        {
+          "round": 4,
+          "pads": [
+            {
+              "side": "left",
+              "row": 2
+            },
+            {
+              "side": "right",
+              "row": 5
+            },
+            {
+              "side": "left",
+              "row": 4
+            },
+            {
+              "side": "right",
+              "row": 3
+            }
+          ],
+          "spawn": {
+            "first": 60,
+            "interval": 76,
+            "maxBalls": 3,
+            "egg": true,
+            "weights": {
+              "ball": 4,
+              "freezeOrb": 1,
+              "crawlerLeft": 1,
+              "crawlerRight": 1,
+              "undoer": 2
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

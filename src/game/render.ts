@@ -2,6 +2,7 @@ import { colorAt } from './board.ts';
 import {
   CUBE_TOP_H,
   CUBE_W,
+  FREEZE_WARN_FRAMES,
   GAME_OVER_MIN_FRAMES,
   ROUND_FLASH_PERIOD,
   SCREEN_H,
@@ -14,22 +15,13 @@ import type { Game } from './game.ts';
 import { enemyPose } from './enemies.ts';
 import type { Enemy } from './enemies.ts';
 import { heroPose, padRidePoint } from './hero.ts';
-import type { Hero } from './hero.ts';
+import { enemyLook, heroLook, spriteOrigin } from './looks.ts';
 import { PALETTE } from './palette.ts';
-import { allCells, cellToScreen, isLeftward, isUpward } from './pyramid.ts';
+import { allCells, cellToScreen } from './pyramid.ts';
 import type { Point } from './pyramid.ts';
 import { DESTINATION, INTERMEDIATE, START } from './rules.ts';
 import type { CubeColor } from './rules.ts';
-import {
-  CHASER,
-  CHASER_EGG,
-  HAZARD_BALL,
-  LIFE_ICON,
-  LIFT_PAD,
-  LIFT_PAD_COLORS,
-  PIP_BACK,
-  PIP_FRONT,
-} from './sprites.ts';
+import { LIFE_ICON, LIFT_PAD, LIFT_PAD_COLORS } from './sprites.ts';
 import type { PixelSprite } from './sprites.ts';
 
 type Bitmap = HTMLCanvasElement;
@@ -101,8 +93,8 @@ function spriteBitmap(sprite: PixelSprite, mirrored: boolean): Bitmap {
 }
 
 function drawSprite(ctx: CanvasRenderingContext2D, sprite: PixelSprite, at: Point, mirrored = false): void {
-  const bmp = spriteBitmap(sprite, mirrored);
-  ctx.drawImage(bmp, Math.round(at.x - sprite.anchorX), Math.round(at.y - sprite.anchorY));
+  const o = spriteOrigin(sprite, at.x, at.y);
+  ctx.drawImage(spriteBitmap(sprite, mirrored), o.x, o.y);
 }
 
 /** Frames per lift-pad color step. */
@@ -122,14 +114,18 @@ function drawHero(ctx: CanvasRenderingContext2D, game: Game): void {
   if (!pose.visible) return;
   const phase = game.phase;
   if (phase.kind === 'dying' && Math.floor(phase.t / DEATH_BLINK_FRAMES) % 2 === 1) return;
-  const sprite = isUpward(hero.facing) ? PIP_BACK : PIP_FRONT;
-  drawSprite(ctx, sprite, pose, isLeftward(hero.facing));
+  const look = heroLook(hero);
+  drawSprite(ctx, look.sprite, pose, look.mirrored);
 }
 
-function drawEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
-  const pose = enemyPose(enemy);
-  const sprite = enemy.kind === 'ball' ? HAZARD_BALL : enemy.kind === 'egg' ? CHASER_EGG : CHASER;
-  drawSprite(ctx, sprite, pose, enemy.kind === 'chaser' && isLeftward(enemy.facing));
+/** Frozen enemies blink during the last FREEZE_WARN_FRAMES of a freeze. */
+const FREEZE_BLINK_FRAMES = 4;
+
+function drawEnemy(ctx: CanvasRenderingContext2D, game: Game, enemy: Enemy): void {
+  const f = game.freezeTimer;
+  if (f > 0 && f <= FREEZE_WARN_FRAMES && Math.floor(f / FREEZE_BLINK_FRAMES) % 2 === 1) return;
+  const look = enemyLook(enemy);
+  drawSprite(ctx, look.sprite, enemyPose(enemy), look.mirrored);
 }
 
 /** Something drawn on top of the pyramid, sorted by screen y so lower things overlap higher ones. */
@@ -151,7 +147,7 @@ function actors(ctx: CanvasRenderingContext2D, game: Game): Drawable[] {
   list.push({ y: heroAt.y, behind: heroAt.behind, draw: () => drawHero(ctx, game) });
   for (const enemy of game.enemies) {
     const at = enemyPose(enemy);
-    list.push({ y: at.y, behind: at.behind, draw: () => drawEnemy(ctx, enemy) });
+    list.push({ y: at.y, behind: at.behind, draw: () => drawEnemy(ctx, game, enemy) });
   }
   return list.sort((a, b) => a.y - b.y);
 }

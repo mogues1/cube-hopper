@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { levelData } from '../src/game/config.ts';
 import {
-  BALL_PAUSE_FRAMES,
-  EGG_HATCH_FRAMES,
   ENEMY_DROP_FRAMES,
   FALL_FRAMES,
   HOP_FRAMES,
@@ -13,8 +12,10 @@ import { allCells, isOnPyramid, step } from '../src/game/pyramid.ts';
 import type { Cell } from '../src/game/pyramid.ts';
 import { createRng } from '../src/game/rng.ts';
 
+const L1 = levelData(1).speed;
+
 function ctx(target: Cell | null = null, lure: Lure | null = null, seed = 7): EnemyContext {
-  return { rng: createRng(seed), target, lure };
+  return { rng: createRng(seed), speed: L1, target, lure };
 }
 
 /** Run until `stop` returns true (or the frame cap), collecting events. */
@@ -76,7 +77,8 @@ describe('hazard ball', () => {
     const c = ctx();
     let frames = 0;
     runUntil(ball, c, (e) => (frames++, e.includes('fellOff')));
-    expect(frames).toBe(ENEMY_DROP_FRAMES + 6 * (BALL_PAUSE_FRAMES + HOP_FRAMES));
+    expect(frames).toBe(ENEMY_DROP_FRAMES + 6 * (L1.ballRest + L1.enemyHop));
+    expect(L1.enemyHop).toBe(HOP_FRAMES);
   });
 });
 
@@ -86,7 +88,7 @@ describe('egg and Chaser', () => {
     const c = ctx();
     runUntil(egg, c, (e) => e.includes('landed') && egg.cell.row === ROWS - 1);
     const bottom = egg.cell;
-    const events = runUntil(egg, c, (e) => e.includes('hatched'), EGG_HATCH_FRAMES + 1);
+    const events = runUntil(egg, c, (e) => e.includes('hatched'), L1.eggHatch + 1);
     expect(events).toEqual(['hatched']);
     expect(egg.kind).toBe('chaser');
     expect(egg.cell).toEqual(bottom);

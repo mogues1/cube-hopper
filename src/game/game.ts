@@ -10,23 +10,25 @@ import {
   DEMO_START_FRAMES,
   EXTRA_LIFE_EVERY,
   FIRST_EXTRA_LIFE,
-  FIRST_SPAWN_FRAMES,
   GAME_OVER_MIN_FRAMES,
-  HOP_FRAMES,
-  MAX_HAZARD_BALLS,
   ROUND_FLASH_FRAMES,
-  SPAWN_INTERVAL_FRAMES,
   START_LIVES,
 } from './constants.ts';
-import { createEnemy, DROP_CELLS, enemyOccupies, updateEnemy } from './enemies.ts';
+import { levelData, roundData } from './config.ts';
+import type { SpawnKind } from './config.ts';
+import { spritesTouch } from './collide.ts';
+import type { Placed } from './collide.ts';
+import { createCrawler, createEnemy, DROP_CELLS, enemyCells, enemyPose, updateEnemy } from './enemies.ts';
 import type { Enemy, Lure } from './enemies.ts';
-import { createHero, heroOccupies, updateHero } from './hero.ts';
+import { createHero, heroCells, heroOccupies, heroPose, updateHero } from './hero.ts';
+import { enemyLook, heroLook } from './looks.ts';
 import type { Hero, HeroEvent } from './hero.ts';
 import { padsForStage, unusedPadPoints } from './pads.ts';
+import { cellIndex } from './pyramid.ts';
 import type { Cell, Dir } from './pyramid.ts';
 import { createRng } from './rng.ts';
 import type { Rng } from './rng.ts';
-import { FIRST_STAGE, nextStage, roundBonus, ruleForLevel } from './rules.ts';
+import { FIRST_STAGE, nextStage, roundBonus, ruleForLevel, START } from './rules.ts';
 import type { ColorRule, CubeColor, Stage } from './rules.ts';
 
 /**
@@ -45,6 +47,9 @@ export const DEMO_PATH: readonly Dir[] = [
 
 /** Points for luring the Chaser off the pyramid with a lift pad. */
 export const CHASER_LURE_POINTS = 500;
+/** Points for catching the freeze orb and an Undoer. */
+export const FREEZE_ORB_POINTS = 100;
+export const UNDOER_POINTS = 300;
 
 export type Phase =
   /** `t` counts frames since the demo started or the hero last landed. */
@@ -86,6 +91,8 @@ export interface Game {
   spawnTimer: number;
   /** Enemies spawned since the round started. */
   spawnCount: number;
+  /** Frames the enemies stay frozen after the hero catches a freeze orb (0 = not frozen). */
+  freezeTimer: number;
   nextEnemyId: number;
   readonly rng: Rng;
 }
@@ -102,7 +109,10 @@ export type GameEvent =
       readonly padBonus: number;
     }
   | { readonly kind: 'hero'; readonly event: HeroEvent }
-  | { readonly kind: 'spawned'; readonly enemy: 'ball' | 'egg' }
+  | { readonly kind: 'spawned'; readonly enemy: SpawnKind | 'egg' }
+  | { readonly kind: 'collected'; readonly enemy: 'freezeOrb' | 'undoer'; readonly points: number }
+  | { readonly kind: 'frozen'; readonly frames: number }
+  | { readonly kind: 'thawed' }
   | { readonly kind: 'hatched' }
   | { readonly kind: 'padUsed'; readonly pad: Cell }
   | { readonly kind: 'chaserLured'; readonly points: number }
@@ -121,13 +131,14 @@ export function createGame(options: GameOptions = {}): Game {
     lives: options.lives ?? START_LIVES,
     nextExtraLife: FIRST_EXTRA_LIFE,
     board: createBoard(),
-    hero: createHero(),
+    hero: createHero(levelData(stage.level).speed.heroHop),
     phase: { kind: 'demo', hop: 0, t: 0 },
     enemies: [],
     pads: padsForStage(stage),
     lure: null,
-    spawnTimer: FIRST_SPAWN_FRAMES,
+    spawnTimer: roundData(stage).spawn.first,
     spawnCount: 0,
+    freezeTimer: 0,
     nextEnemyId: 1,
     rng: createRng(options.seed ?? 1),
   };
@@ -154,12 +165,13 @@ function addScore(game: Game, points: number, events: GameEvent[]): void {
 function clearEnemies(game: Game): void {
   game.enemies = [];
   game.lure = null;
-  game.spawnTimer = FIRST_SPAWN_FRAMES;
+  game.freezeTimer = 0;
+  game.spawnTimer = roundData(game.stage).spawn.first;
 }
 
 function resetForStage(game: Game): void {
   resetBoard(game.board);
-  game.hero = createHero();
+  game.hero = createHero(levelData(game.stage.level).speed.heroHop);
   game.pads = padsForStage(game.stage);
   game.spawnCount = 0;
   clearEnemies(game);
@@ -193,47 +205,79 @@ function enterGameOver(game: Game, events: GameEvent[]): void {
   events.push({ kind: 'gameOver', score: game.score });
 }
 
+/** How many of each spawnable kind may be out at once (hazard balls come from the table). */
+const SPAWN_CAPS: Readonly<Record<Exclude<SpawnKind, 'ball'>, number>> = {
+  freezeOrb: 1,
+  crawlerLeft: 1,
+  crawlerRight: 1,
+  undoer: 1,
+};
+
+function countOut(game: Game, kind: SpawnKind): number {
+  return game.enemies.filter((e) => {
+    if (kind === 'crawlerLeft') return e.kind === 'crawler' && e.side === 'left';
+    if (kind === 'crawlerRight') return e.kind === 'crawler' && e.side === 'right';
+    return e.kind === kind;
+  }).length;
+}
+
+/**
+ * One spawn from the round's table. The first spawn of a round is always a hazard ball;
+ * after that the egg comes whenever no egg or Chaser is out, otherwise a weighted random
+ * pick among the kinds still under their cap. Nothing spawns if every kind is capped.
+ */
 function spawn(game: Game, events: GameEvent[]): void {
-  const hasChaser = game.enemies.some((e) => e.kind !== 'ball');
-  const balls = game.enemies.filter((e) => e.kind === 'ball').length;
-  // The first spawn of a round is always a hazard ball; after that an egg whenever no
-  // egg or Chaser is out, else another ball if there is room.
-  let kind: 'ball' | 'egg' | null = null;
-  if (game.spawnCount > 0 && !hasChaser) kind = 'egg';
-  else if (balls < MAX_HAZARD_BALLS) kind = 'ball';
+  const table = roundData(game.stage).spawn;
+  const hasChaser = game.enemies.some((e) => e.kind === 'egg' || e.kind === 'chaser');
+  let kind: SpawnKind | 'egg' | null = null;
+  if (game.spawnCount === 0) {
+    kind = countOut(game, 'ball') < table.maxBalls ? 'ball' : null;
+  } else if (table.egg && !hasChaser) {
+    kind = 'egg';
+  } else {
+    const open = (Object.entries(table.weights) as [SpawnKind, number][]).filter(([k]) =>
+      k === 'ball' ? countOut(game, k) < table.maxBalls : countOut(game, k) < SPAWN_CAPS[k],
+    );
+    const total = open.reduce((n, [, w]) => n + w, 0);
+    let roll = game.rng.next() * total;
+    for (const [k, w] of open) {
+      roll -= w;
+      if (roll < 0) {
+        kind = k;
+        break;
+      }
+    }
+  }
   if (kind === null) return;
-  const to = DROP_CELLS[game.rng.int(DROP_CELLS.length)] ?? { row: 1, col: 0 };
-  game.enemies.push(createEnemy(game.nextEnemyId++, kind, to));
+
+  const id = game.nextEnemyId++;
+  if (kind === 'crawlerLeft' || kind === 'crawlerRight') {
+    const hop = levelData(game.stage.level).speed.enemyHop;
+    game.enemies.push(createCrawler(id, kind === 'crawlerLeft' ? 'left' : 'right', hop));
+  } else {
+    const to = DROP_CELLS[game.rng.int(DROP_CELLS.length)] ?? { row: 1, col: 0 };
+    game.enemies.push(createEnemy(id, kind, to));
+  }
   game.spawnCount += 1;
   events.push({ kind: 'spawned', enemy: kind });
 }
 
 /**
- * The enemy touching the hero this step, if any. Each counts as standing on its start cube
- * for the first half of a hop and on its target after, so they meet when those match. Two
- * hopping past each other that cross the halfway point on the same frame never share a
- * cube, so that swap is caught separately.
+ * The enemies touching the hero this step. Two things must both hold:
+ *  1. They share a cube: one the hero stands on or is hopping between, and one the enemy
+ *     stands on, is hopping between, or is dropping onto. This keeps sprites that merely
+ *     overlap on screen across different cubes (the isometric view stacks them) from counting.
+ *  2. Their sprites visibly touch: a drawn pixel of one overlaps or is next to a drawn pixel
+ *     of the other, using exactly the sprites and positions the renderer draws.
  */
-function findCatcher(game: Game): Enemy | null {
-  const heroCell = heroOccupies(game.hero);
-  if (heroCell === null) return null;
-  const hs = game.hero.state;
-  const half = HOP_FRAMES / 2;
-  for (const enemy of game.enemies) {
-    if (sameCell(heroCell, enemyOccupies(enemy))) return enemy;
-    const es = enemy.state;
-    if (
-      hs.kind === 'hopping' &&
-      es.kind === 'hopping' &&
-      hs.t >= half &&
-      es.t >= half &&
-      sameCell(hs.from, es.to) &&
-      sameCell(hs.to, es.from)
-    ) {
-      return enemy;
-    }
-  }
-  return null;
+function touching(game: Game): Enemy[] {
+  const heroAt = heroCells(game.hero);
+  if (heroAt.length === 0) return [];
+  const hero: Placed = { ...heroLook(game.hero), at: heroPose(game.hero) };
+  return game.enemies.filter((enemy) => {
+    const shared = enemyCells(enemy).some((c) => heroAt.some((h) => sameCell(h, c)));
+    return shared && spritesTouch(hero, { ...enemyLook(enemy), at: enemyPose(enemy) });
+  });
 }
 
 function updateDemo(game: Game, phase: Extract<Phase, { kind: 'demo' }>, events: GameEvent[]): void {
@@ -317,31 +361,58 @@ function updatePlaying(game: Game, pressed: Dir | null, held: Dir | null, events
   const heroGone = hero.state.kind === 'falling' || hero.state.kind === 'respawning';
   if (heroGone || game.options.enemies === false) return;
 
-  const target = heroOccupies(hero) ?? (hero.state.kind === 'hopping' ? hero.state.from : null);
-  const ctx = { rng: game.rng, target, lure: game.lure };
-  const gone = new Set<number>();
-  for (const enemy of game.enemies) {
-    for (const ev of updateEnemy(enemy, ctx)) {
-      if (ev === 'hatched') events.push({ kind: 'hatched' });
-      if (ev === 'lured') {
-        addScore(game, CHASER_LURE_POINTS, events);
-        events.push({ kind: 'chaserLured', points: CHASER_LURE_POINTS });
+  const level = levelData(game.stage.level);
+  if (game.freezeTimer > 0) {
+    // Frozen: enemies stand still and nothing spawns, but touching them still counts.
+    game.freezeTimer -= 1;
+    if (game.freezeTimer === 0) events.push({ kind: 'thawed' });
+  } else {
+    const target = heroOccupies(hero) ?? (hero.state.kind === 'hopping' ? hero.state.from : null);
+    const ctx = { rng: game.rng, speed: level.speed, target, lure: game.lure };
+    const gone = new Set<number>();
+    for (const enemy of game.enemies) {
+      for (const ev of updateEnemy(enemy, ctx)) {
+        if (ev === 'hatched') events.push({ kind: 'hatched' });
+        if (ev === 'lured') {
+          addScore(game, CHASER_LURE_POINTS, events);
+          events.push({ kind: 'chaserLured', points: CHASER_LURE_POINTS });
+        }
+        // An Undoer turns every cube it lands on back to the start color.
+        if (ev === 'landed' && enemy.kind === 'undoer' && colorAt(game.board, enemy.cell) !== START) {
+          game.board.colors[cellIndex(enemy.cell)] = START;
+          events.push({ kind: 'cubeChanged', cell: enemy.cell, color: START, points: 0 });
+        }
+        if (ev === 'gone') gone.add(enemy.id);
       }
-      if (ev === 'gone') gone.add(enemy.id);
+    }
+    if (gone.size > 0) game.enemies = game.enemies.filter((e) => !gone.has(e.id));
+
+    // No spawns during a lift-pad ride.
+    if (hero.state.kind !== 'riding') {
+      game.spawnTimer -= 1;
+      if (game.spawnTimer <= 0) {
+        spawn(game, events);
+        game.spawnTimer = roundData(game.stage).spawn.interval;
+      }
     }
   }
-  if (gone.size > 0) game.enemies = game.enemies.filter((e) => !gone.has(e.id));
 
-  // No spawns during a lift-pad ride.
-  if (hero.state.kind !== 'riding') {
-    game.spawnTimer -= 1;
-    if (game.spawnTimer <= 0) {
-      spawn(game, events);
-      game.spawnTimer = SPAWN_INTERVAL_FRAMES;
+  // Catchable enemies are collected first; any other contact costs a life.
+  let catcher: Enemy | null = null;
+  for (const enemy of touching(game)) {
+    if (enemy.kind === 'freezeOrb' || enemy.kind === 'undoer') {
+      game.enemies = game.enemies.filter((e) => e !== enemy);
+      const points = enemy.kind === 'freezeOrb' ? FREEZE_ORB_POINTS : UNDOER_POINTS;
+      addScore(game, points, events);
+      events.push({ kind: 'collected', enemy: enemy.kind, points });
+      if (enemy.kind === 'freezeOrb') {
+        game.freezeTimer = level.speed.freeze;
+        events.push({ kind: 'frozen', frames: level.speed.freeze });
+      }
+    } else {
+      catcher ??= enemy;
     }
   }
-
-  const catcher = findCatcher(game);
   if (catcher) {
     game.phase = { kind: 'dying', t: 0 };
     events.push({ kind: 'caught', by: catcher.kind });

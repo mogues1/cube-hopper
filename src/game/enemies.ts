@@ -1,37 +1,38 @@
-// Hazard balls, the egg and the Chaser: movement, pursuit AI and collision cells. No DOM.
+// Every enemy: movement, the Chaser's pursuit AI and collision cells. No DOM.
+//
+// Bouncers (hazard ball, freeze orb, Undoer, egg) drop in onto row 1 and hop down at random.
+// The egg hatches on the bottom row into the Chaser. Side crawlers walk along the cubes'
+// side faces from a bottom corner toward the far edge.
 
-import {
-  BALL_PAUSE_FRAMES,
-  CHASER_PAUSE_FRAMES,
-  EGG_HATCH_FRAMES,
-  ENEMY_DROP_FRAMES,
-  ENEMY_DROP_HEIGHT,
-  FALL_FRAMES,
-  HOP_FRAMES,
-  ROWS,
-} from './constants.ts';
+import type { LevelSpeed } from './config.ts';
+import { ENEMY_DROP_FRAMES, ENEMY_DROP_HEIGHT, FALL_FRAMES, FALL_GRAVITY, ROWS } from './constants.ts';
 import { fallPoint, hopPoint, lerpPoint } from './motion.ts';
+import type { Side } from './pads.ts';
 import { allCells, cellIndex, cellToScreen, DIRS, isBehindPyramid, isOnPyramid, step } from './pyramid.ts';
 import type { Cell, Dir, Point } from './pyramid.ts';
 import type { Rng } from './rng.ts';
 
-export type EnemyKind = 'ball' | 'egg' | 'chaser';
+export type EnemyKind = 'ball' | 'egg' | 'chaser' | 'freezeOrb' | 'undoer' | 'crawler';
+export type DropKind = 'ball' | 'egg' | 'freezeOrb' | 'undoer';
 
 export type EnemyState =
   /** Falling in from above the screen onto `to` (a row-1 cube). */
   | { readonly kind: 'dropping'; readonly to: Cell; t: number }
   /** Standing on its cube between hops. */
   | { readonly kind: 'resting'; t: number }
-  | { readonly kind: 'hopping'; readonly from: Cell; readonly to: Cell; t: number }
+  /** `frames` is this hop's duration, fixed when it starts. */
+  | { readonly kind: 'hopping'; readonly from: Cell; readonly to: Cell; readonly frames: number; t: number }
   | { readonly kind: 'falling'; readonly at: Cell; readonly behind: boolean; t: number };
 
 export interface Enemy {
   readonly id: number;
   kind: EnemyKind;
-  /** Last cube it stood on (its drop target while dropping). */
+  /** Last cube it stood on (its drop target while dropping). For crawlers, the cube whose side it is on. */
   cell: Cell;
   state: EnemyState;
   facing: Dir;
+  /** Crawlers only: which side faces it walks on (it enters at that side's bottom corner). */
+  readonly side: Side | null;
   /** Set when a Chaser hops off the pyramid after the hero's lift pad. */
   lured: boolean;
 }
@@ -44,6 +45,7 @@ export interface Lure {
 
 export interface EnemyContext {
   readonly rng: Rng;
+  readonly speed: LevelSpeed;
   /** The cube the Chaser heads for, or null if the hero is not on the pyramid. */
   readonly target: Cell | null;
   readonly lure: Lure | null;
@@ -51,15 +53,67 @@ export interface EnemyContext {
 
 export type EnemyEvent = 'landed' | 'hatched' | 'fellOff' | 'lured' | 'gone';
 
-/** The two cubes under the apex, where every enemy drops in. */
+/** The two cubes under the apex, where every dropping enemy lands. */
 export const DROP_CELLS: readonly Cell[] = [
   { row: 1, col: 0 },
   { row: 1, col: 1 },
 ];
 
-export function createEnemy(id: number, kind: 'ball' | 'egg', to: Cell): Enemy {
-  return { id, kind, cell: to, state: { kind: 'dropping', to, t: 0 }, facing: 'downLeft', lured: false };
+export function createEnemy(id: number, kind: DropKind, to: Cell): Enemy {
+  return { id, kind, cell: to, state: { kind: 'dropping', to, t: 0 }, facing: 'downLeft', side: null, lured: false };
 }
+
+// --- Side crawlers --------------------------------------------------------------------------
+
+/**
+ * Crawler steps, as (row, col) changes of the cube whose face it is on. A left-face crawler
+ * enters at the bottom-left corner and works right or up-right; a right-face crawler mirrors
+ * it from the bottom-right. Either leaves the pyramid when it steps past the far edge.
+ */
+const CRAWLER_STEPS: Readonly<Record<Side, readonly { dr: number; dc: number }[]>> = {
+  left: [
+    { dr: 0, dc: 1 },
+    { dr: -1, dc: 0 },
+  ],
+  right: [
+    { dr: 0, dc: -1 },
+    { dr: -1, dc: -1 },
+  ],
+};
+
+const BOTTOM = ROWS - 1;
+
+/** A crawler's first cube, and the off-pyramid cube it walks in from. */
+export function crawlerEntry(side: Side): { from: Cell; to: Cell } {
+  return side === 'left'
+    ? { from: { row: BOTTOM, col: -1 }, to: { row: BOTTOM, col: 0 } }
+    : { from: { row: BOTTOM, col: BOTTOM + 1 }, to: { row: BOTTOM, col: BOTTOM } };
+}
+
+export function createCrawler(id: number, side: Side, enemyHop: number): Enemy {
+  const { from, to } = crawlerEntry(side);
+  return {
+    id,
+    kind: 'crawler',
+    cell: from,
+    state: { kind: 'hopping', from, to, frames: enemyHop, t: 0 },
+    facing: side === 'left' ? 'downRight' : 'downLeft',
+    side,
+    lured: false,
+  };
+}
+
+/**
+ * Screen point of a crawler on the left or right side face of `cell`. It clings to the top
+ * rim of the face, peeking over the edge, so it visibly reaches the feet of a hero standing
+ * on that cube.
+ */
+export function facePoint(cell: Cell, side: Side): Point {
+  const top = cellToScreen(cell);
+  return { x: top.x + (side === 'left' ? -8 : 8), y: top.y + 5 };
+}
+
+// --- Chaser pursuit -------------------------------------------------------------------------
 
 // All-pairs hop distances over the 28 cubes (BFS), for the Chaser's pursuit.
 const CELLS = allCells();
@@ -108,16 +162,45 @@ export function chaseDir(from: Cell, target: Cell): Dir {
   return best.dir;
 }
 
-function pauseFrames(kind: EnemyKind): number {
-  return kind === 'ball' ? BALL_PAUSE_FRAMES : CHASER_PAUSE_FRAMES;
+// --- Update ---------------------------------------------------------------------------------
+
+function restFrames(kind: EnemyKind, speed: LevelSpeed): number {
+  switch (kind) {
+    case 'ball':
+    case 'freezeOrb':
+      return speed.ballRest;
+    case 'undoer':
+      return speed.undoerRest;
+    case 'crawler':
+      return speed.crawlerRest;
+    case 'egg':
+    case 'chaser':
+      return speed.chaserRest;
+  }
 }
 
-function nextDir(enemy: Enemy, ctx: EnemyContext): Dir | null {
-  if (enemy.kind !== 'chaser') return ctx.rng.int(2) === 0 ? 'downLeft' : 'downRight';
+/** Where the enemy hops next, or null to keep waiting. */
+function nextCell(enemy: Enemy, ctx: EnemyContext): Cell | null {
+  if (enemy.kind === 'crawler') {
+    const steps = CRAWLER_STEPS[enemy.side ?? 'left'];
+    const d = steps[ctx.rng.int(steps.length)] ?? { dr: 0, dc: 1 };
+    return { row: enemy.cell.row + d.dr, col: enemy.cell.col + d.dc };
+  }
+  if (enemy.kind !== 'chaser') {
+    const dir: Dir = ctx.rng.int(2) === 0 ? 'downLeft' : 'downRight';
+    enemy.facing = dir;
+    return step(enemy.cell, dir);
+  }
   const lure = ctx.lure;
-  if (lure && enemy.cell.row === lure.cell.row && enemy.cell.col === lure.cell.col) return lure.dir;
-  const target = lure ? lure.cell : ctx.target;
-  return target ? chaseDir(enemy.cell, target) : null;
+  let dir: Dir | null;
+  if (lure && enemy.cell.row === lure.cell.row && enemy.cell.col === lure.cell.col) dir = lure.dir;
+  else {
+    const target = lure ? lure.cell : ctx.target;
+    dir = target ? chaseDir(enemy.cell, target) : null;
+  }
+  if (dir === null) return null; // nothing to chase: wait
+  enemy.facing = dir;
+  return step(enemy.cell, dir);
 }
 
 /** Advance one enemy by one step. Mutates it and returns what happened. */
@@ -135,30 +218,29 @@ export function updateEnemy(enemy: Enemy, ctx: EnemyContext): EnemyEvent[] {
       break;
     case 'resting': {
       s.t += 1;
-      if (enemy.kind === 'egg' && enemy.cell.row === ROWS - 1) {
-        if (s.t >= EGG_HATCH_FRAMES) {
+      if (enemy.kind === 'egg' && enemy.cell.row === BOTTOM) {
+        if (s.t >= ctx.speed.eggHatch) {
           enemy.kind = 'chaser';
           enemy.state = { kind: 'resting', t: 0 };
           events.push('hatched');
         }
         break;
       }
-      if (s.t < pauseFrames(enemy.kind)) break;
-      const dir = nextDir(enemy, ctx);
-      if (dir === null) break; // Chaser with nothing to chase waits.
-      enemy.facing = dir;
-      enemy.state = { kind: 'hopping', from: enemy.cell, to: step(enemy.cell, dir), t: 0 };
+      if (s.t < restFrames(enemy.kind, ctx.speed)) break;
+      const to = nextCell(enemy, ctx);
+      if (to === null) break;
+      enemy.state = { kind: 'hopping', from: enemy.cell, to, frames: ctx.speed.enemyHop, t: 0 };
       break;
     }
     case 'hopping':
       s.t += 1;
-      if (s.t >= HOP_FRAMES) {
+      if (s.t >= s.frames) {
         if (isOnPyramid(s.to)) {
           enemy.cell = s.to;
           enemy.state = { kind: 'resting', t: 0 };
           events.push('landed');
         } else {
-          enemy.state = { kind: 'falling', at: s.to, behind: isBehindPyramid(s.to), t: 0 };
+          enemy.state = { kind: 'falling', at: s.to, behind: isBehindPyramid(s.to) && enemy.kind !== 'crawler', t: 0 };
           events.push('fellOff');
           if (enemy.kind === 'chaser' && ctx.lure) {
             enemy.lured = true;
@@ -181,11 +263,30 @@ export function enemyOccupies(enemy: Enemy): Cell | null {
   switch (s.kind) {
     case 'resting':
       return enemy.cell;
-    case 'hopping':
-      if (s.t < HOP_FRAMES / 2) return s.from;
-      return isOnPyramid(s.to) ? s.to : null;
+    case 'hopping': {
+      const c = s.t < s.frames / 2 ? s.from : s.to;
+      return isOnPyramid(c) ? c : null;
+    }
     default:
       return null;
+  }
+}
+
+/**
+ * Cubes an enemy is on, hopping between, or dropping onto (on the pyramid only), for
+ * collision checks. A falling enemy has left the pyramid and touches nothing.
+ */
+export function enemyCells(enemy: Enemy): Cell[] {
+  const s = enemy.state;
+  switch (s.kind) {
+    case 'resting':
+      return [enemy.cell];
+    case 'dropping':
+      return [s.to];
+    case 'hopping':
+      return [s.from, s.to].filter(isOnPyramid);
+    case 'falling':
+      return [];
   }
 }
 
@@ -193,8 +294,12 @@ export interface EnemyPose extends Point {
   readonly behind: boolean;
 }
 
+/** Hop height for crawlers stepping along the faces (a scuttle, not a jump). */
+const CRAWL_ARC = 4;
+
 export function enemyPose(enemy: Enemy): EnemyPose {
   const s = enemy.state;
+  const side = enemy.side;
   switch (s.kind) {
     case 'dropping': {
       const land = cellToScreen(s.to);
@@ -202,10 +307,19 @@ export function enemyPose(enemy: Enemy): EnemyPose {
       return { ...lerpPoint({ x: land.x, y: land.y - ENEMY_DROP_HEIGHT }, land, p * p), behind: false };
     }
     case 'resting':
-      return { ...cellToScreen(enemy.cell), behind: false };
-    case 'hopping':
-      return { ...hopPoint(s.from, s.to, s.t / HOP_FRAMES), behind: false };
-    case 'falling':
-      return { ...fallPoint(s.at, s.t), behind: s.behind };
+      return { ...(side ? facePoint(enemy.cell, side) : cellToScreen(enemy.cell)), behind: false };
+    case 'hopping': {
+      const p = s.t / s.frames;
+      if (!side) return { ...hopPoint(s.from, s.to, p), behind: false };
+      const a = facePoint(s.from, side);
+      const b = facePoint(s.to, side);
+      const at = lerpPoint(a, b, p);
+      return { x: at.x, y: at.y - CRAWL_ARC * 4 * p * (1 - p), behind: false };
+    }
+    case 'falling': {
+      if (!side) return { ...fallPoint(s.at, s.t), behind: s.behind };
+      const at = facePoint(s.at, side);
+      return { x: at.x, y: at.y + 0.5 * FALL_GRAVITY * s.t * s.t, behind: false };
+    }
   }
 }
