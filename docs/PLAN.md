@@ -47,3 +47,20 @@ Nine milestones over 16 weeks, one full-time developer, art and audio part time 
 - [x] A look-ahead bot clears an empty pyramid through all 36 rounds with no falls — `tests/game.test.ts`
 - [x] `?level=N` URL option to start at any level for playtesting
 - [ ] Measure the sequence timings in [TIMING.md](TIMING.md) (placeholders for now)
+
+## M3 deliverables (this repo)
+
+- [x] Hazard balls: drop in, random downward bounces, fall off the bottom — `src/game/enemies.ts`
+- [x] Egg → Chaser: hatches on the bottom row; pursuit AI that closes one hop per hop and never leaves the pyramid on its own — `src/game/enemies.ts`
+- [x] Lift pads beside the edges; ride to the top, drop onto the apex; no spawns during the ride — `src/game/pads.ts`, `src/game/hero.ts`
+- [x] Chaser lured off a pad for 500 — `src/game/game.ts`
+- [x] Spawner with seeded randomness (first ball, then egg; one Chaser at a time) — `src/game/game.ts`, `src/game/rng.ts`
+- [x] Collisions (half-hop rule plus same-frame swaps), death freeze with blinking Pip, life lost, enemies cleared
+- [x] Lives (3), extra lives at 8,000 + every 14,000, game over and restart on a key
+- [x] Unused lift pad bonus at round end (placeholder 50 / 100)
+- [x] Sprites: hazard ball, egg, Chaser, lift pad, life icon; palette at 16 colors
+- [x] Tests: enemy movement and AI, pads and the ride, spawning, collisions, lives, game over, the lure, and an idle player losing every life to the Chaser — `tests/enemies.test.ts`, `tests/hazards.test.ts`
+- [x] `?enemies=0` URL option for the empty pyramid
+- [ ] Measure the enemy and sequence timings in [TIMING.md](TIMING.md) (placeholders for now)
+- [ ] Side-crawler rendering spike (risk mitigation from the plan doc), deferred to M4
+

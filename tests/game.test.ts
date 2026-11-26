@@ -41,7 +41,7 @@ function hop(game: Game, dir: Dir): GameEvent[] {
 
 describe('level demo', () => {
   it('opens each game, recolors cubes without scoring, then starts round 1 on a fresh board', () => {
-    const game = createGame();
+    const game = createGame({ enemies: false });
     expect(game.phase.kind).toBe('demo');
     const events = run(game, DEMO_FRAMES);
     // Level 1: each of the two cubes turns to the goal once, then stays.
@@ -56,7 +56,7 @@ describe('level demo', () => {
   });
 
   it('demonstrates the revert on levels that have one', () => {
-    const game = createGame({ level: 5, round: 1 });
+    const game = createGame({ stage: { level: 5, round: 1 }, enemies: false });
     const colors = run(game, DEMO_FRAMES)
       .filter((e) => e.kind === 'cubeChanged')
       .map((e) => (e.kind === 'cubeChanged' ? e.color : -1));
@@ -65,7 +65,7 @@ describe('level demo', () => {
   });
 
   it('ignores player input', () => {
-    const game = createGame();
+    const game = createGame({ enemies: false });
     run(game, DEMO_START_FRAMES - 1, 'downRight');
     expect(game.hero.state.kind).toBe('idle');
   });
@@ -73,7 +73,7 @@ describe('level demo', () => {
 
 describe('playing a round', () => {
   it('landing recolors the cube and scores', () => {
-    const game = createGame({ level: 2, round: 1 });
+    const game = createGame({ stage: { level: 2, round: 1 }, enemies: false });
     skipDemo(game);
     const events = hop(game, 'downRight');
     expect(events).toContainEqual({ kind: 'cubeChanged', cell: { row: 1, col: 1 }, color: INTERMEDIATE, points: 15 });
@@ -85,7 +85,7 @@ describe('playing a round', () => {
   });
 
   it('a landing that changes nothing emits no cubeChanged', () => {
-    const game = createGame();
+    const game = createGame({ enemies: false });
     skipDemo(game);
     hop(game, 'downRight');
     hop(game, 'upLeft');
@@ -94,7 +94,7 @@ describe('playing a round', () => {
   });
 
   it('falling off keeps the board and respawns on the apex', () => {
-    const game = createGame();
+    const game = createGame({ enemies: false });
     skipDemo(game);
     hop(game, 'downRight');
     const events = [...hop(game, 'upRight'), ...run(game, 200)];
@@ -112,7 +112,7 @@ describe('round complete', () => {
   }
 
   it('awards the bonus, stops the hero even if a key is held, flashes, then starts the next round', () => {
-    const game = createGame({ level: 1, round: 2 });
+    const game = createGame({ stage: { level: 1, round: 2 }, enemies: false });
     skipDemo(game);
     finishAllButOne(game, { row: 1, col: 0 });
     const scoreBefore = game.score;
@@ -121,8 +121,14 @@ describe('round complete', () => {
     const events: GameEvent[] = [];
     for (let i = 0; i < HOP_FRAMES; i++) events.push(...updateGame(game, null, 'downLeft'));
 
-    expect(events).toContainEqual({ kind: 'roundComplete', stage: { level: 1, round: 2 }, bonus: 1250 });
-    expect(game.score).toBe(scoreBefore + 25 + 1250);
+    // Round bonus 1,250 plus 2 unused lift pads × 50 on level 1.
+    expect(events).toContainEqual({
+      kind: 'roundComplete',
+      stage: { level: 1, round: 2 },
+      bonus: 1350,
+      padBonus: 100,
+    });
+    expect(game.score).toBe(scoreBefore + 25 + 1350);
     expect(game.phase.kind).toBe('roundComplete');
     expect(game.hero.state.kind).toBe('idle');
     expect(isComplete(game.board)).toBe(true);
@@ -138,7 +144,7 @@ describe('round complete', () => {
   });
 
   it('after round 4 the next level opens with its demo', () => {
-    const game = createGame({ level: 3, round: 4 });
+    const game = createGame({ stage: { level: 3, round: 4 }, enemies: false });
     skipDemo(game);
     finishAllButOne(game, { row: 1, col: 0 });
     hop(game, 'downLeft');
@@ -199,7 +205,7 @@ function botMove(game: Game): Dir {
 
 describe('clearing an empty pyramid', () => {
   it('a bot clears all 36 rounds, level 1 through level 9, without falling', () => {
-    const game = createGame();
+    const game = createGame({ enemies: false });
     const cleared: Stage[] = [];
     const hopsPerRound: number[] = [];
     let hops = 0;

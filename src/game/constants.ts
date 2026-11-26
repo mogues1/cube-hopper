@@ -35,3 +35,25 @@ export const DEMO_HOP_PAUSE_FRAMES = 10; // idle pause between demo hops
 export const DEMO_END_FRAMES = 45; // hold on the finished demo before the round starts
 export const ROUND_FLASH_FRAMES = 120; // round-complete flash before the next round
 export const ROUND_FLASH_PERIOD = 8; // frames per color in the flash
+
+/** Lift pads (frames at 60 Hz). Placeholders; see docs/TIMING.md. */
+export const LIFT_RIDE_FRAMES = 90; // pad carries the hero from the edge to above the apex
+export const LIFT_DROP_FRAMES = 12; // hero drops from the pad onto the apex
+export const LIFT_HOVER_Y = 20; // px above the apex top where the ride ends
+
+/** Enemies (frames at 60 Hz). Placeholders; see docs/TIMING.md "Enemies". */
+export const ENEMY_DROP_FRAMES = 24; // falling in from above onto row 1
+export const ENEMY_DROP_HEIGHT = 48; // px above the landing cube where a drop starts
+export const BALL_PAUSE_FRAMES = 14; // rest between hazard-ball hops
+export const CHASER_PAUSE_FRAMES = 18; // rest between egg / Chaser hops
+export const EGG_HATCH_FRAMES = 60; // egg waits on the bottom row, then hatches
+export const FIRST_SPAWN_FRAMES = 120; // round start (or reset) to first enemy
+export const SPAWN_INTERVAL_FRAMES = 150; // between later spawns
+export const MAX_HAZARD_BALLS = 2;
+
+/** Death, lives and game over. */
+export const DEATH_FREEZE_FRAMES = 90; // everything stops after contact
+export const GAME_OVER_MIN_FRAMES = 60; // game over shows at least this long before a key restarts
+export const START_LIVES = 3;
+export const FIRST_EXTRA_LIFE = 8000;
+export const EXTRA_LIFE_EVERY = 14000;
