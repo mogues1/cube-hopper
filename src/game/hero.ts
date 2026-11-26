@@ -13,7 +13,8 @@ import type { Cell, Dir, Point } from './pyramid.ts';
 
 export type HeroState =
   | { readonly kind: 'idle' }
-  | { readonly kind: 'hopping'; readonly from: Cell; readonly to: Cell; t: number }
+  /** `frames` is this hop's duration, fixed when it starts. */
+  | { readonly kind: 'hopping'; readonly from: Cell; readonly to: Cell; readonly frames: number; t: number }
   /** Carried by a lift pad from `pad` (an off-pyramid cell) to the apex. */
   | { readonly kind: 'riding'; readonly pad: Cell; t: number }
   | { readonly kind: 'falling'; readonly at: Cell; readonly behind: boolean; t: number }
@@ -24,6 +25,8 @@ export interface Hero {
   cell: Cell;
   state: HeroState;
   facing: Dir;
+  /** Duration of the hero's hops (the level's speed). */
+  hopFrames: number;
   /** Most recent requested hop, kept for a few frames so early presses are not lost. */
   buffered: Dir | null;
   bufferAge: number;
@@ -44,8 +47,8 @@ export interface HeroHooks {
 
 export const RIDE_TOTAL_FRAMES = LIFT_RIDE_FRAMES + LIFT_DROP_FRAMES;
 
-export function createHero(): Hero {
-  return { cell: APEX, state: { kind: 'idle' }, facing: 'downRight', buffered: null, bufferAge: 0 };
+export function createHero(hopFrames: number = HOP_FRAMES): Hero {
+  return { cell: APEX, state: { kind: 'idle' }, facing: 'downRight', hopFrames, buffered: null, bufferAge: 0 };
 }
 
 /**
@@ -87,7 +90,7 @@ export function updateHero(
       break;
     case 'hopping':
       s.t += 1;
-      if (s.t >= HOP_FRAMES) {
+      if (s.t >= s.frames) {
         if (isOnPyramid(s.to)) {
           land(s.to);
         } else if (hooks.isPad?.(s.to)) {
@@ -133,7 +136,7 @@ export function updateHero(
     const dir = next;
     hero.buffered = null;
     hero.facing = dir;
-    hero.state = { kind: 'hopping', from: hero.cell, to: step(hero.cell, dir), t: 0 };
+    hero.state = { kind: 'hopping', from: hero.cell, to: step(hero.cell, dir), frames: hero.hopFrames, t: 0 };
     events.push('hopStart');
   }
 
@@ -150,7 +153,7 @@ export function heroOccupies(hero: Hero): Cell | null {
     case 'idle':
       return hero.cell;
     case 'hopping':
-      if (s.t < HOP_FRAMES / 2) return s.from;
+      if (s.t < s.frames / 2) return s.from;
       return isOnPyramid(s.to) ? s.to : null;
     default:
       return null;
@@ -183,7 +186,7 @@ export function heroPose(hero: Hero): HeroPose {
       return { x: p.x, y: p.y, visible: true, behind: false };
     }
     case 'hopping':
-      return { ...hopPoint(s.from, s.to, s.t / HOP_FRAMES), visible: true, behind: false };
+      return { ...hopPoint(s.from, s.to, s.t / s.frames), visible: true, behind: false };
     case 'riding': {
       if (s.t < LIFT_RIDE_FRAMES) return { ...padRidePoint(s.pad, s.t), visible: true, behind: false };
       const p = (s.t - LIFT_RIDE_FRAMES) / LIFT_DROP_FRAMES;

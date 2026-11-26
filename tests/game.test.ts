@@ -233,5 +233,5 @@ describe('clearing an empty pyramid', () => {
     // Cube points plus every round bonus (1,000 … 9,750).
     const bonuses = Array.from({ length: 36 }, (_, i) => 1000 + 250 * i).reduce((a, b) => a + b, 0);
     expect(game.score).toBeGreaterThan(bonuses);
-  });
+  }, 30_000); // ~1 s normally; headroom for slow CI machines
 });

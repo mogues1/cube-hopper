@@ -4,12 +4,11 @@ import {
   EXTRA_LIFE_EVERY,
   FALL_FRAMES,
   FIRST_EXTRA_LIFE,
-  FIRST_SPAWN_FRAMES,
   GAME_OVER_MIN_FRAMES,
   HOP_FRAMES,
-  SPAWN_INTERVAL_FRAMES,
   START_LIVES,
 } from '../src/game/constants.ts';
+import { roundData } from '../src/game/config.ts';
 import { createEnemy } from '../src/game/enemies.ts';
 import type { Enemy } from '../src/game/enemies.ts';
 import { CHASER_LURE_POINTS, createGame, updateGame } from '../src/game/game.ts';
@@ -35,7 +34,7 @@ function playing(options: GameOptions = {}, at: Cell = { row: 0, col: 0 }): Game
   return game;
 }
 
-function place(game: Game, kind: Enemy['kind'], cell: Cell): Enemy {
+function place(game: Game, kind: Exclude<Enemy['kind'], 'crawler'>, cell: Cell): Enemy {
   const e = createEnemy(game.nextEnemyId++, kind === 'chaser' ? 'egg' : kind, cell);
   e.kind = kind;
   e.cell = cell;
@@ -134,6 +133,7 @@ describe('luring the Chaser', () => {
 describe('spawning', () => {
   it('first a hazard ball, then the egg, at the spawn interval', () => {
     const game = playing();
+    const { first: FIRST_SPAWN_FRAMES, interval: SPAWN_INTERVAL_FRAMES } = roundData({ level: 1, round: 1 }).spawn;
     const spawns: string[] = [];
     const at: number[] = [];
     for (let f = 1; f <= FIRST_SPAWN_FRAMES + SPAWN_INTERVAL_FRAMES; f++) {
@@ -197,7 +197,7 @@ describe('getting caught', () => {
     for (const offset of [-1, 0, 3, -4]) {
       const game = playing({}, { row: 2, col: 1 });
       const chaser = place(game, 'chaser', { row: 3, col: 1 });
-      chaser.state = { kind: 'hopping', from: { row: 3, col: 1 }, to: { row: 2, col: 1 }, t: offset };
+      chaser.state = { kind: 'hopping', from: { row: 3, col: 1 }, to: { row: 2, col: 1 }, frames: HOP_FRAMES, t: offset };
       const events = [...updateGame(game, 'downLeft'), ...run(game, HOP_FRAMES)];
       const at = events.findIndex((e) => e.kind === 'caught');
       expect(at, `offset ${offset}`).toBeGreaterThanOrEqual(0);

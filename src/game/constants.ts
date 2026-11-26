@@ -20,7 +20,7 @@ export const ROW_STEP_Y = CUBE_TOP_H / 2 + CUBE_SIDE_H; // 24 px between rows
 export const APEX_X = SCREEN_W / 2;
 export const APEX_Y = 40;
 
-/** Hero timing (frames at 60 Hz). See docs/TIMING.md. */
+/** Hero timing (frames at 60 Hz). See docs/TIMING.md. HOP_FRAMES is level 1's hop; later levels' are in rounds.json. */
 export const HOP_FRAMES = 18;
 export const HOP_HEIGHT = 12;
 export const FALL_FRAMES = 60;
@@ -41,15 +41,13 @@ export const LIFT_RIDE_FRAMES = 90; // pad carries the hero from the edge to abo
 export const LIFT_DROP_FRAMES = 12; // hero drops from the pad onto the apex
 export const LIFT_HOVER_Y = 20; // px above the apex top where the ride ends
 
-/** Enemies (frames at 60 Hz). Placeholders; see docs/TIMING.md "Enemies". */
+/**
+ * Enemies (frames at 60 Hz). Placeholders; see docs/TIMING.md "Enemies". Per-level speeds
+ * and per-round spawn tables live in src/data/rounds.json.
+ */
 export const ENEMY_DROP_FRAMES = 24; // falling in from above onto row 1
 export const ENEMY_DROP_HEIGHT = 48; // px above the landing cube where a drop starts
-export const BALL_PAUSE_FRAMES = 14; // rest between hazard-ball hops
-export const CHASER_PAUSE_FRAMES = 18; // rest between egg / Chaser hops
-export const EGG_HATCH_FRAMES = 60; // egg waits on the bottom row, then hatches
-export const FIRST_SPAWN_FRAMES = 120; // round start (or reset) to first enemy
-export const SPAWN_INTERVAL_FRAMES = 150; // between later spawns
-export const MAX_HAZARD_BALLS = 2;
+export const FREEZE_WARN_FRAMES = 60; // frozen enemies blink for this long before they move again
 
 /** Death, lives and game over. */
 export const DEATH_FREEZE_FRAMES = 90; // everything stops after contact

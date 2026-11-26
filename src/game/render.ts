@@ -2,6 +2,7 @@ import { colorAt } from './board.ts';
 import {
   CUBE_TOP_H,
   CUBE_W,
+  FREEZE_WARN_FRAMES,
   GAME_OVER_MIN_FRAMES,
   ROUND_FLASH_PERIOD,
   SCREEN_H,
@@ -23,12 +24,15 @@ import type { CubeColor } from './rules.ts';
 import {
   CHASER,
   CHASER_EGG,
+  CRAWLER,
+  FREEZE_ORB,
   HAZARD_BALL,
   LIFE_ICON,
   LIFT_PAD,
   LIFT_PAD_COLORS,
   PIP_BACK,
   PIP_FRONT,
+  UNDOER,
 } from './sprites.ts';
 import type { PixelSprite } from './sprites.ts';
 
@@ -126,10 +130,24 @@ function drawHero(ctx: CanvasRenderingContext2D, game: Game): void {
   drawSprite(ctx, sprite, pose, isLeftward(hero.facing));
 }
 
-function drawEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
-  const pose = enemyPose(enemy);
-  const sprite = enemy.kind === 'ball' ? HAZARD_BALL : enemy.kind === 'egg' ? CHASER_EGG : CHASER;
-  drawSprite(ctx, sprite, pose, enemy.kind === 'chaser' && isLeftward(enemy.facing));
+const ENEMY_SPRITES: Readonly<Record<Enemy['kind'], PixelSprite>> = {
+  ball: HAZARD_BALL,
+  egg: CHASER_EGG,
+  chaser: CHASER,
+  freezeOrb: FREEZE_ORB,
+  undoer: UNDOER,
+  crawler: CRAWLER,
+};
+
+/** Frozen enemies blink during the last FREEZE_WARN_FRAMES of a freeze. */
+const FREEZE_BLINK_FRAMES = 4;
+
+function drawEnemy(ctx: CanvasRenderingContext2D, game: Game, enemy: Enemy): void {
+  const f = game.freezeTimer;
+  if (f > 0 && f <= FREEZE_WARN_FRAMES && Math.floor(f / FREEZE_BLINK_FRAMES) % 2 === 1) return;
+  const mirrored =
+    enemy.kind === 'crawler' ? enemy.side === 'right' : enemy.kind !== 'ball' && isLeftward(enemy.facing);
+  drawSprite(ctx, ENEMY_SPRITES[enemy.kind], enemyPose(enemy), mirrored);
 }
 
 /** Something drawn on top of the pyramid, sorted by screen y so lower things overlap higher ones. */
@@ -151,7 +169,7 @@ function actors(ctx: CanvasRenderingContext2D, game: Game): Drawable[] {
   list.push({ y: heroAt.y, behind: heroAt.behind, draw: () => drawHero(ctx, game) });
   for (const enemy of game.enemies) {
     const at = enemyPose(enemy);
-    list.push({ y: at.y, behind: at.behind, draw: () => drawEnemy(ctx, enemy) });
+    list.push({ y: at.y, behind: at.behind, draw: () => drawEnemy(ctx, game, enemy) });
   }
   return list.sort((a, b) => a.y - b.y);
 }

@@ -82,6 +82,15 @@ Taken from the original game's published rules; see the plan doc for the full ta
 - **Unused pads** at round end: 50 each on level 1, 100 after (placeholder; sources only say "50, later 100"). The round-complete bonus caption includes them.
 - **Lives:** start with 3; extra life at 8,000 and every 14,000 after. When the last is lost the game shows GAME OVER; after 1 second any key starts a new game (attract mode and high scores come in M6).
 
+## Full cast, data and speed (M4)
+
+- **Freeze orb:** bounces down like a hazard ball. Catching it scores 100 and freezes every other enemy for the level's freeze time (300 frames on level 1); nothing spawns meanwhile, and frozen enemies blink for the last second. Frozen enemies are still deadly to touch (our choice; sources only say they are frozen).
+- **Side crawlers:** two green beetles. One enters at the bottom-left corner and walks the cubes' left faces, stepping right or up-right at random; the other mirrors it on the right faces from the bottom-right. Each leaves the pyramid past the far edge. A crawler on the side of the cube Pip stands on catches it. At most one per side at a time.
+- **Undoers:** an orange gremlin with a paint roller. It bounces down like a ball and turns every cube it lands on back to the start color. Catching it scores 300 and costs no life. At most one at a time.
+- **First appearances:** level 1 adds one kind per round: round 1 hazard balls and the egg, round 2 the freeze orb, round 3 the side crawlers, round 4 the Undoer. From level 2 everything can appear.
+- **Spawning:** the first spawn of a round is a hazard ball, then the egg whenever no egg or Chaser is out, otherwise a weighted random pick among kinds under their cap.
+- **Data:** per-level speeds and per-round pads and spawn tables live in `src/data/rounds.json`, checked at load (`src/game/config.ts`) so a bad edit fails with the exact field named. Every hop, rest and hatch time gets shorter as levels rise; spawns come faster round by round, and each level starts no easier than the previous level's first round. Lift pads: 2 per round on levels 1–2, 3 on 3–5, 4 on 6–9.
+
 ## Out of scope for v1
 
 Bonus/minigame rounds, level editor, online leaderboards, cocktail-cabinet screen flip.
