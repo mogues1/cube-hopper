@@ -16,9 +16,12 @@ import {
 } from './constants.ts';
 import { levelData, roundData } from './config.ts';
 import type { SpawnKind } from './config.ts';
-import { createCrawler, createEnemy, DROP_CELLS, enemyOccupies, updateEnemy } from './enemies.ts';
+import { spritesTouch } from './collide.ts';
+import type { Placed } from './collide.ts';
+import { createCrawler, createEnemy, DROP_CELLS, enemyCells, enemyPose, updateEnemy } from './enemies.ts';
 import type { Enemy, Lure } from './enemies.ts';
-import { createHero, heroOccupies, updateHero } from './hero.ts';
+import { createHero, heroCells, heroOccupies, heroPose, updateHero } from './hero.ts';
+import { enemyLook, heroLook } from './looks.ts';
 import type { Hero, HeroEvent } from './hero.ts';
 import { padsForStage, unusedPadPoints } from './pads.ts';
 import { cellIndex } from './pyramid.ts';
@@ -260,26 +263,20 @@ function spawn(game: Game, events: GameEvent[]): void {
 }
 
 /**
- * The enemies touching the hero this step. Each counts as standing on its start cube
- * for the first half of a hop and on its target after, so they meet when those match. Two
- * hopping past each other that cross the halfway point on the same frame never share a
- * cube, so that swap is caught separately.
+ * The enemies touching the hero this step. Two things must both hold:
+ *  1. They share a cube: one the hero stands on or is hopping between, and one the enemy
+ *     stands on, is hopping between, or is dropping onto. This keeps sprites that merely
+ *     overlap on screen across different cubes (the isometric view stacks them) from counting.
+ *  2. Their sprites visibly touch: a drawn pixel of one overlaps or is next to a drawn pixel
+ *     of the other, using exactly the sprites and positions the renderer draws.
  */
 function touching(game: Game): Enemy[] {
-  const heroCell = heroOccupies(game.hero);
-  if (heroCell === null) return [];
-  const hs = game.hero.state;
+  const heroAt = heroCells(game.hero);
+  if (heroAt.length === 0) return [];
+  const hero: Placed = { ...heroLook(game.hero), at: heroPose(game.hero) };
   return game.enemies.filter((enemy) => {
-    if (sameCell(heroCell, enemyOccupies(enemy))) return true;
-    const es = enemy.state;
-    return (
-      hs.kind === 'hopping' &&
-      es.kind === 'hopping' &&
-      hs.t >= hs.frames / 2 &&
-      es.t >= es.frames / 2 &&
-      sameCell(hs.from, es.to) &&
-      sameCell(hs.to, es.from)
-    );
+    const shared = enemyCells(enemy).some((c) => heroAt.some((h) => sameCell(h, c)));
+    return shared && spritesTouch(hero, { ...enemyLook(enemy), at: enemyPose(enemy) });
   });
 }
 

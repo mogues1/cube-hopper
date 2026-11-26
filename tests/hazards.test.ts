@@ -9,11 +9,13 @@ import {
   START_LIVES,
 } from '../src/game/constants.ts';
 import { roundData } from '../src/game/config.ts';
-import { createEnemy } from '../src/game/enemies.ts';
+import { spritesTouch } from '../src/game/collide.ts';
+import { createEnemy, enemyPose } from '../src/game/enemies.ts';
 import type { Enemy } from '../src/game/enemies.ts';
 import { CHASER_LURE_POINTS, createGame, updateGame } from '../src/game/game.ts';
 import type { Game, GameEvent, GameOptions } from '../src/game/game.ts';
 import { createHero, heroPose, RIDE_TOTAL_FRAMES, updateHero } from '../src/game/hero.ts';
+import { enemyLook, heroLook } from '../src/game/looks.ts';
 import type { HeroEvent } from '../src/game/hero.ts';
 import { padCell, padsForStage } from '../src/game/pads.ts';
 import { cellToScreen, isOnPyramid, step } from '../src/game/pyramid.ts';
@@ -44,6 +46,12 @@ function place(game: Game, kind: Exclude<Enemy['kind'], 'crawler'>, cell: Cell):
 }
 
 const kinds = (events: GameEvent[]): string[] => events.map((e) => e.kind);
+
+/** Whether Pip and `enemy` touch as drawn right now. */
+function visiblyTouching(game: Game, enemy: Enemy): boolean {
+  if (game.hero.state.kind !== 'idle' && game.hero.state.kind !== 'hopping') return false;
+  return spritesTouch({ ...heroLook(game.hero), at: heroPose(game.hero) }, { ...enemyLook(enemy), at: enemyPose(enemy) });
+}
 
 describe('lift pads', () => {
   it('sit beside an edge cube, one up-and-outward hop away', () => {
@@ -182,36 +190,71 @@ describe('getting caught', () => {
     expect(game.hero.cell).toEqual({ row: 2, col: 1 });
   });
 
-  it('hopping into a resting enemy catches the hero on the second half of the hop', () => {
+  /**
+   * Run until caught (or `cap` frames). Returns the frame of the catch, and checks the sprites
+   * as drawn were apart on every earlier frame and touching on that one.
+   */
+  function untilCaught(game: Game, enemy: Enemy, first: Dir | null, cap = 60): number {
+    for (let f = 0; f < cap; f++) {
+      const apartBefore = !visiblyTouching(game, enemy);
+      const caught = updateGame(game, f === 0 ? first : null).some((e) => e.kind === 'caught');
+      if (caught) {
+        expect(visiblyTouching(game, enemy), `touching at the catch, frame ${f}`).toBe(true);
+        return f;
+      }
+      expect(apartBefore || f === 0, `frame ${f}`).toBe(true);
+    }
+    return -1;
+  }
+
+  it('hopping toward a resting enemy is caught on the first frame the sprites touch', () => {
     const game = playing({}, { row: 2, col: 1 });
-    place(game, 'chaser', { row: 3, col: 1 });
-    game.enemies[0]!.state = { kind: 'resting', t: -10_000 }; // keep it still
-    updateGame(game, 'downLeft');
-    const events = run(game, HOP_FRAMES / 2);
-    expect(kinds(events)).toEqual(['caught']);
-    expect(game.hero.state.kind === 'hopping' && game.hero.state.t).toBe(HOP_FRAMES / 2);
+    const chaser = place(game, 'chaser', { row: 3, col: 1 });
+    chaser.state = { kind: 'resting', t: -10_000 }; // keep it still
+    const f = untilCaught(game, chaser, 'downLeft');
+    expect(f).toBeGreaterThan(0); // not at the start of the hop, a cube away
+    expect(f).toBeLessThanOrEqual(HOP_FRAMES);
   });
 
-  it('hero and enemy swapping cubes collide mid-hop, whatever their timing', () => {
-    // Enemy start offsets: -1 makes both cross halfway on the same frame.
-    for (const offset of [-1, 0, 3, -4]) {
+  it('an enemy landing on the cube Pip is leaving only catches Pip if they actually touch', () => {
+    // The case that looked unfair: the old half-hop rule counted Pip as still on its start
+    // cube while the Chaser, half a hop above, counted as already on it, with a visible gap.
+    const game = playing({}, { row: 2, col: 1 });
+    const chaser = place(game, 'chaser', { row: 1, col: 1 });
+    chaser.state = { kind: 'hopping', from: { row: 1, col: 1 }, to: { row: 2, col: 1 }, frames: HOP_FRAMES, t: 8 };
+    const pip = { ...heroLook(game.hero), at: heroPose(game.hero) };
+    expect(spritesTouch(pip, { ...enemyLook(chaser), at: enemyPose(chaser) })).toBe(false);
+    // Pip hops away down-right. On the first frame the old rule caught Pip (both "on" (2,1))
+    // across a 9 px gap; now Pip is only caught if and when the sprites meet.
+    const f = untilCaught(game, chaser, 'downRight');
+    expect(f === -1 || f > 1, `caught at frame ${f}`).toBe(true);
+  });
+
+  it('swapping cubes with an enemy is caught when the sprites meet, whatever the timing', () => {
+    for (const offset of [-1, 0, 3, -4, 6]) {
       const game = playing({}, { row: 2, col: 1 });
       const chaser = place(game, 'chaser', { row: 3, col: 1 });
       chaser.state = { kind: 'hopping', from: { row: 3, col: 1 }, to: { row: 2, col: 1 }, frames: HOP_FRAMES, t: offset };
-      const events = [...updateGame(game, 'downLeft'), ...run(game, HOP_FRAMES)];
-      const at = events.findIndex((e) => e.kind === 'caught');
-      expect(at, `offset ${offset}`).toBeGreaterThanOrEqual(0);
-      // Not caught while still a cube apart at the start of the hops.
-      const hs = game.hero.state;
-      expect(hs.kind === 'hopping' && hs.t, `offset ${offset}`).toBeGreaterThanOrEqual(HOP_FRAMES / 2 - 4);
+      // Frame 0 is fine when they already overlap at the start (offset 6).
+      expect(untilCaught(game, chaser, 'downLeft'), `offset ${offset}`).toBeGreaterThanOrEqual(0);
     }
   });
 
-  it('an enemy dropping in is harmless until it lands', () => {
+  it('a dropping enemy catches Pip when it reaches Pip, not before', () => {
     const game = playing({}, { row: 1, col: 0 });
-    game.enemies.push(createEnemy(game.nextEnemyId++, 'ball', { row: 1, col: 0 }));
-    expect(kinds(run(game, 5))).not.toContain('caught');
-    expect(kinds(run(game, 40))).toContain('caught');
+    const ball = createEnemy(game.nextEnemyId++, 'ball', { row: 1, col: 0 });
+    game.enemies.push(ball);
+    const f = untilCaught(game, ball, null);
+    expect(f).toBeGreaterThan(5);
+  });
+
+  it('sprites overlapping on screen across different cubes do not count', () => {
+    // Pip on (4,1); a ball resting on (3,1), the cube up-left-behind it. The isometric
+    // view stacks them, but they are on different cubes and neither is moving.
+    const game = playing({}, { row: 4, col: 1 });
+    const ball = place(game, 'ball', { row: 3, col: 0 });
+    ball.state = { kind: 'resting', t: -10_000 };
+    expect(kinds(run(game, 30))).not.toContain('caught');
   });
 });
 

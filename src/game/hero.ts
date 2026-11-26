@@ -160,6 +160,14 @@ export function heroOccupies(hero: Hero): Cell | null {
   }
 }
 
+/** Cubes the hero is on or hopping between (on the pyramid only), for collision checks. */
+export function heroCells(hero: Hero): Cell[] {
+  const s = hero.state;
+  if (s.kind === 'idle') return [hero.cell];
+  if (s.kind === 'hopping') return [s.from, s.to].filter(isOnPyramid);
+  return [];
+}
+
 export interface HeroPose extends Point {
   readonly visible: boolean;
   /** Draw before the pyramid (falling off a back edge). */

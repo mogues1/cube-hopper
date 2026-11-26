@@ -103,10 +103,14 @@ export function createCrawler(id: number, side: Side, enemyHop: number): Enemy {
   };
 }
 
-/** Screen point of a crawler on the left or right side face of `cell`. */
+/**
+ * Screen point of a crawler on the left or right side face of `cell`. It clings to the top
+ * rim of the face, peeking over the edge, so it visibly reaches the feet of a hero standing
+ * on that cube.
+ */
 export function facePoint(cell: Cell, side: Side): Point {
   const top = cellToScreen(cell);
-  return { x: top.x + (side === 'left' ? -8 : 8), y: top.y + 14 };
+  return { x: top.x + (side === 'left' ? -8 : 8), y: top.y + 5 };
 }
 
 // --- Chaser pursuit -------------------------------------------------------------------------
@@ -265,6 +269,24 @@ export function enemyOccupies(enemy: Enemy): Cell | null {
     }
     default:
       return null;
+  }
+}
+
+/**
+ * Cubes an enemy is on, hopping between, or dropping onto (on the pyramid only), for
+ * collision checks. A falling enemy has left the pyramid and touches nothing.
+ */
+export function enemyCells(enemy: Enemy): Cell[] {
+  const s = enemy.state;
+  switch (s.kind) {
+    case 'resting':
+      return [enemy.cell];
+    case 'dropping':
+      return [s.to];
+    case 'hopping':
+      return [s.from, s.to].filter(isOnPyramid);
+    case 'falling':
+      return [];
   }
 }
 
